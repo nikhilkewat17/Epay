@@ -1,0 +1,100 @@
+# **1. OpenShift (oc) Commands**
+
+OpenShift uses `oc` as its CLI, but most `kubectl` commands also work.
+
+### **Login and Project Management**
+
+```bash
+oc login https://<cluster-url>:6443        # Login to OpenShift cluster
+oc projects                                # List all projects (namespaces)
+oc project <project-name>                  # Switch to a specific project
+oc whoami                                  # Show current user
+```
+### **Pods and Deployments**
+```bash
+oc get pods                                # List pods in current project
+oc get pods -A                             # List pods in all projects
+oc describe pod <pod-name>                 # Show details of a pod
+oc logs <pod-name>                         # View logs of a pod
+oc exec -it <pod-name> -- /bin/bash        # Access pod shell
+oc delete pod <pod-name>                   # Delete a pod
+```
+### **Services and Routes**
+```bash
+oc get svc                                 # List services
+oc get routes                              # List OpenShift routes (exposed endpoints)
+oc describe route <route-name>             # Show route details
+```
+
+---
+
+# **2. Spark on Kubernetes (Within OpenShift)**
+
+If you are running Spark in a Kubernetes cluster via Spark-on-K8s (native), you use `spark-submit` with Kubernetes master settings.
+
+### **Submit a Spark Job**
+
+```bash
+spark-submit \
+  --master k8s://https://<k8s-api-server>:6443 \
+  --deploy-mode cluster \
+  --name my-spark-job \
+  --class org.example.MyApp \
+  --conf spark.kubernetes.namespace=<namespace> \
+  --conf spark.executor.instances=2 \
+  --conf spark.kubernetes.container.image=<spark-image> \
+  local:///opt/spark/examples/jars/my-app.jar
+```
+
+### **Check Spark Applications**
+
+```bash
+kubectl get pods -n <namespace> | grep spark   # List Spark driver & executor pods
+kubectl logs <spark-driver-pod>                # Check driver logs
+```
+---
+# **3. Kubernetes (kubectl) Daily Commands**
+
+OpenShift supports `kubectl` commands as well:
+
+```bash
+kubectl get pods                    # List pods
+kubectl describe pod <pod-name>     # Pod details
+kubectl logs -f <pod-name>          # Stream logs
+kubectl delete pod <pod-name>       # Delete pod
+kubectl get events                  # Show cluster events (troubleshooting)
+```
+---
+# **4. Build & Deploy Spark Images in OpenShift**
+
+To build a custom Spark image:
+
+```bash
+oc new-build --name spark-app \
+  --strategy docker \
+  --binary=true
+oc start-build spark-app --from-dir=. --follow
+```
+---
+# **5. Monitor Spark Jobs**
+
+* Use OpenShift Web Console to check Spark driver & executor pods.
+* Use:
+
+```bash
+kubectl get pods -n <spark-namespace> -o wide
+```
+* Access Spark UI (if exposed as service or route).
+---
+# **6. Debugging & Logs**
+```bash
+oc logs <driver-pod>        # View Spark driver logs
+oc logs <executor-pod>      # View Spark executor logs
+oc rsh <pod-name>           # Remote shell into a pod
+```
+# **7. OpenShift + Kubernetes Context**
+```bash
+oc config view              # View config
+oc config use-context <ctx> # Switch context
+```
+
