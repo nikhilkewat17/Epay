@@ -1,0 +1,90 @@
+Here’s a list of **daily used Kubernetes (kubectl) commands** that every engineer typically uses while working with Kubernetes clusters:
+## **1. Cluster Information**
+
+```bash
+kubectl cluster-info                 # Show cluster information
+kubectl get nodes                    # List all nodes in the cluster
+kubectl describe node <node-name>    # Detailed info about a specific node
+```
+---
+## **2. Namespace Management**
+```bash
+kubectl get namespaces               # List all namespaces
+kubectl create namespace dev         # Create a new namespace
+kubectl config set-context --current --namespace=dev   # Switch current namespace
+```
+---
+## **3. Pods Management**
+
+```bash
+kubectl get pods                     # List all pods in current namespace
+kubectl get pods -A                  # List all pods across all namespaces
+kubectl describe pod <pod-name>      # Detailed info about a specific pod
+kubectl logs <pod-name>              # Show pod logs
+kubectl exec -it <pod-name> -- /bin/bash   # Access a pod shell
+kubectl delete pod <pod-name>        # Delete a pod
+```
+---
+## **4. Deployments**
+
+```bash
+kubectl get deployments              # List all deployments
+kubectl describe deployment <name>   # Detailed info about a deployment
+kubectl rollout status deployment <name>    # Check rollout status
+kubectl rollout undo deployment <name>      # Rollback to previous version
+```
+---
+## **5. Services**
+```bash
+kubectl get svc                      # List all services
+kubectl describe svc <service-name>  # Detailed info about a service
+kubectl expose deployment <name> --type=NodePort --port=8080  # Expose a deployment
+```
+---
+## **6. ConfigMaps & Secrets**
+```bash
+kubectl get configmaps               # List ConfigMaps
+kubectl describe configmap <name>    # Show details of a ConfigMap
+kubectl get secrets                  # List Secrets
+kubectl describe secret <name>       # Show details of a Secret
+``---
+## **7. Apply & Manage Resources**
+
+```bash
+kubectl apply -f app.yaml            # Apply configuration from a YAML file
+kubectl delete -f app.yaml           # Delete resources from a YAML file
+kubectl edit deployment <name>       # Edit a deployment (opens in editor)
+kubectl get all                      # List all resources in the namespace
+```
+---
+## **8. Logs & Troubleshooting**
+
+```bash
+kubectl logs <pod-name>              # Show logs of a pod
+kubectl logs -f <pod-name>           # Follow logs (streaming)
+kubectl describe pod <pod-name>      # Debug issues in a pod
+kubectl get events                   # Show cluster events
+```
+---
+## **9. Port Forwarding (Access Pod Locally)**
+
+```bash
+kubectl port-forward <pod-name> 8080:80   # Forward local 8080 to pod’s 80
+```
+---
+## **10. Context & Config**
+
+```bash
+kubectl config get-contexts          # List all contexts
+kubectl config use-context <name>    # Switch context
+kubectl config view                  # Show current configuration
+```
+### **Tip:**
+
+If you want to avoid typing long `kubectl` commands, create an alias:
+
+```bash
+alias k=kubectl
+```
+Then you can use `k get pods`, `k get svc`, etc.
+
