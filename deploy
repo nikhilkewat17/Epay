@@ -1,0 +1,242 @@
+[epayuser@bastion ~]$ oc get deploy jaeger-collector -n istio-system -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+    linkerd.io/inject: disabled
+    prometheus.io/port: "14269"
+    prometheus.io/scrape: "true"
+  creationTimestamp: "2024-11-08T10:30:28Z"
+  generation: 92
+  labels:
+    app: jaeger
+    app.kubernetes.io/component: collector
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: jaeger-operator
+    app.kubernetes.io/name: jaeger-collector
+    app.kubernetes.io/part-of: jaeger
+  name: jaeger-collector
+  namespace: istio-system
+  ownerReferences:
+  - apiVersion: jaegertracing.io/v1
+    controller: true
+    kind: Jaeger
+    name: j                                                                         aeger
+    uid: ac5f7171-1928-4af4-a097-ce117fe42503
+  resourceVersion: "301424417"
+  uid: 7603a3be-88b1-49ed-b9b9-2fc296ab6e8f
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: jaeger
+      app.kubernetes.io/component: collector
+      app.kubernetes.io/instance: jaeger
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: jaeger-collector
+      app.kubernetes.io/part-of: jaeger
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: disabled
+        prometheus.io/port: "14269"
+        prometheus.io/scrape: "true"
+        sidecar.istio.io/inject: "false"
+      creationTimestamp: null
+      labels:
+        app: jaeger
+        app.kubernetes.io/component: collector
+        app.kubernetes.io/instance: jaeger
+        app.kubernetes.io/managed-by: jaeger-operator
+        app.kubernetes.io/name: jaeger-collector
+        app.kubernetes.io/part-of: jaeger
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+            weight: 2
+          - preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - arm64
+            weight: 2
+          - preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - ppc64le
+            weight: 2
+          - preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - s390x
+            weight: 2
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
+                - ppc64le
+                - s390x
+      containers:
+      - args:
+        - --collector.grpc.tls.cert=/etc/tls-config/tls.crt
+        - --collector.grpc.tls.enabled=true
+        - --collector.grpc.tls.key=/etc/tls-config/tls.key
+        - --sampling.strategies-file=/etc/jaeger/sampling/sampling.json
+        - --es.server-urls=https://elasticsearch.istio-system.svc.cluster.local:9200
+        - --es.tls.enabled=true
+        - --es.tls.ca=/certs/ca
+        - --es.tls.cert=/certs/cert
+        - --es.tls.key=/certs/key
+        - --es.timeout=15s
+        - --es.num-shards=3
+        - --es.num-replicas=1
+        env:
+        - name: SPAN_STORAGE_TYPE
+          value: elasticsearch
+        - name: COLLECTOR_ZIPKIN_HOST_PORT
+          value: :9411
+        - name: COLLECTOR_OTLP_ENABLED
+          value: "true"
+        - name: COLLECTOR_OTLP_GRPC_HOST_PORT
+          value: 0.0.0.0:4317
+        - name: COLLECTOR_OTLP_HTTP_HOST_PORT
+          value: 0.0.0.0:4318
+        image: registry.redhat.io/rhosdt/jaeger-collector-rhel8@sha256:79948c384908d72f87a9bd018f3a230a2bc38ff32cac1c17ce9bf2e62f7a92dc
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /
+            port: 14269
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 15
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: jaeger-collector
+        ports:
+        - containerPort: 9411
+          name: zipkin
+          protocol: TCP
+        - containerPort: 14267
+          name: c-tchan-trft
+          protocol: TCP
+        - containerPort: 14268
+          name: c-binary-trft
+          protocol: TCP
+        - containerPort: 14269
+          name: admin-http
+          protocol: TCP
+        - containerPort: 14250
+          name: grpc
+          protocol: TCP
+        - containerPort: 4317
+          name: grpc-otlp
+          protocol: TCP
+        - containerPort: 4318
+          name: http-otlp
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 14269
+            scheme: HTTP
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/proxy/htpasswd
+          name: secret-htpasswd
+        - mountPath: /etc/pki/ca-trust/extracted/pem/
+          name: trusted-ca-bundle
+          readOnly: true
+        - mountPath: /etc/jaeger/sampling
+          name: jaeger-sampling-configuration-volume
+          readOnly: true
+        - mountPath: /etc/tls-config
+          name: jaeger-collector-tls-config-volume
+          readOnly: true
+        - mountPath: /certs
+          name: certs
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: jaeger
+      serviceAccountName: jaeger
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: secret-htpasswd
+        secret:
+          defaultMode: 420
+          secretName: htpasswd
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: ca-bundle.crt
+            path: tls-ca-bundle.pem
+          name: trusted-ca-bundle
+          optional: true
+        name: trusted-ca-bundle
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: sampling
+            path: sampling.json
+          name: jaeger-sampling-configuration
+        name: jaeger-sampling-configuration-volume
+      - name: jaeger-collector-tls-config-volume
+        secret:
+          defaultMode: 420
+          secretName: jaeger-collector-headless-tls
+      - name: certs
+        secret:
+          defaultMode: 420
+          secretName: jaeger-jaeger-elasticsearch
+status:
+  conditions:
+  - lastTransitionTime: "2024-11-08T10:30:28Z"
+    lastUpdateTime: "2025-04-21T16:04:07Z"
+    message: ReplicaSet "jaeger-collector-564446d9d6" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2025-06-05T09:55:35Z"
+    lastUpdateTime: "2025-06-05T09:55:35Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 92
+[epayuser@bastion ~]$
