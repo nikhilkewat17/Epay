@@ -1,0 +1,43 @@
+Docker Commands :
+docker --version        # Check Docker version
+docker info             # Show system-wide information
+docker ps               # List running containers
+docker ps -a            # List all containers (including stopped ones)
+docker images           # List all Docker images
+docker stats            # Show real-time resource usage of containers
+docker logs <container> # Show logs of a running container
+
+2. Container Management
+docker run <image>                     # Run a container from an image
+docker run -it <image> /bin/bash       # Run container in interactive mode
+docker run -d -p 8080:80 <image>       # Run in detached mode with port mapping
+docker stop <container_id>             # Stop a running container
+docker start <container_id>            # Start a stopped container
+docker restart <container_id>          # Restart a container
+docker rm <container_id>               # Remove a container
+docker exec -it <container_id> bash    # Enter a running container shell
+
+3. Image Management
+docker pull <image>          # Download an image from Docker Hub
+docker build -t <name> .     # Build an image from Dockerfile
+docker rmi <image_id>        # Remove an image
+docker tag <image_id> <repo>:<tag>  # Tag an image
+docker push <repo>:<tag>     # Push image to Docker Hub
+
+4. Volume & Network
+docker volume ls             # List all volumes
+docker volume create <name>  # Create a volume
+docker network ls            # List all networks
+docker network create <name> # Create a custom network
+
+5. Cleaning Up Unused Data
+docker system prune          # Remove unused containers, images, and networks
+docker rm $(docker ps -aq)   # Remove all stopped containers
+docker rmi $(docker images -q)  # Remove all images
+
+6. Docker Compose (if using docker-compose.yml)
+docker-compose up            # Start services
+docker-compose up -d         # Start services in detached mode
+docker-compose down          # Stop and remove services
+docker-compose ps            # Show running services
+docker-compose logs          # Show logs
