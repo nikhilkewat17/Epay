@@ -1,0 +1,241 @@
+Great! Let’s break it down step-by-step. I’ll give you:
+
+1. ✅ All Docker files and job code structure
+
+
+2. 📂 Where and how to write YAML files for Spark jobs
+
+
+3. 🛠️ How to build and deploy everything on OpenShift
+
+
+
+
+---
+
+✅ PART 1: Project Structure – Spark + Docker + YAML
+
+spark-openshift/
+│
+├── jobs/
+│   └── txn_stream_job.py         # your PySpark code
+│
+├── docker/
+│   ├── Dockerfile                # container image
+│   └── entrypoint.sh             # entrypoint for spark-submit
+│
+├── k8s/
+│   ├── spark-job.yaml            # Job definition YAML
+│   ├── spark-service.yaml        # Optional: expose Spark UI
+│   ├── pvc.yaml                  # Volume
+│   ├── configmap.yaml            # Environment config
+│   └── secret.yaml               # Secrets for DB/Kafka
+│
+├── deploy/
+│   └── deploy.sh                 # Script to apply all YAMLs
+│
+└── README.md
+
+
+---
+
+📁 PART 2: All Docker Files & Spark Job
+
+📄 jobs/txn_stream_job.py
+
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("TxnStreamJob") \
+    .getOrCreate()
+
+# Simulated input source
+data = [("txn001", 100), ("txn002", 500), ("txn003", 250)]
+df = spark.createDataFrame(data, ["txn_id", "amount"])
+
+df.show()
+
+spark.stop()
+
+
+---
+
+📄 docker/Dockerfile
+
+FROM bitnami/spark:3.4.1
+
+WORKDIR /opt/spark-app
+
+COPY entrypoint.sh ./entrypoint.sh
+COPY ../jobs ./jobs
+
+RUN chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
+
+
+---
+
+📄 docker/entrypoint.sh
+
+#!/bin/bash
+
+echo "Launching Spark Job..."
+
+spark-submit \
+  --master k8s://https://kubernetes.default.svc \
+  --deploy-mode cluster \
+  --name txn-stream-job \
+  --conf spark.kubernetes.namespace=dev-spark \
+  --conf spark.kubernetes.container.image=image-registry.openshift-image-registry.svc:5000/dev-spark/spark-job:latest \
+  --conf spark.executor.instances=2 \
+  ./jobs/txn_stream_job.py
+
+
+---
+
+📦 PART 3: Build & Push Docker Image to OpenShift
+
+1. Log in to OpenShift internal registry:
+
+
+
+oc whoami -t  # Get token
+
+2. Build and push:
+
+
+
+docker build -t spark-job:latest docker/
+docker tag spark-job:latest image-registry.openshift-image-registry.svc:5000/dev-spark/spark-job:latest
+docker push image-registry.openshift-image-registry.svc:5000/dev-spark/spark-job:latest
+
+
+---
+
+📝 PART 4: YAML Files (Write Once, Reuse for Jobs)
+
+📄 k8s/spark-job.yaml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-job
+  namespace: dev-spark
+spec:
+  template:
+    spec:
+      containers:
+      - name: spark
+        image: image-registry.openshift-image-registry.svc:5000/dev-spark/spark-job:latest
+        volumeMounts:
+        - name: output
+          mountPath: /opt/output
+        envFrom:
+        - configMapRef:
+            name: spark-config
+        - secretRef:
+            name: spark-secret
+      restartPolicy: Never
+      volumes:
+      - name: output
+        persistentVolumeClaim:
+          claimName: spark-pvc
+
+
+---
+
+📄 k8s/pvc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spark-pvc
+  namespace: dev-spark
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+---
+
+📄 k8s/configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-config
+  namespace: dev-spark
+data:
+  APP_ENV: dev
+  LOG_LEVEL: DEBUG
+
+
+---
+
+📄 k8s/secret.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: spark-secret
+  namespace: dev-spark
+type: Opaque
+data:
+  db-password: bXlwYXNzCg==   # base64 for "mypwd"
+
+
+---
+
+📄 k8s/spark-service.yaml (Optional: Spark UI)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-ui
+  namespace: dev-spark
+spec:
+  selector:
+    app: spark
+  ports:
+    - protocol: TCP
+      port: 4040
+      targetPort: 4040
+      nodePort: 30040
+  type: NodePort
+
+
+---
+
+🚀 PART 5: Deploy All Spark Jobs
+
+📄 deploy/deploy.sh
+
+#!/bin/bash
+
+oc project dev-spark
+
+oc apply -f ../k8s/configmap.yaml
+oc apply -f ../k8s/secret.yaml
+oc apply -f ../k8s/pvc.yaml
+oc apply -f ../k8s/spark-job.yaml
+oc apply -f ../k8s/spark-service.yaml
+
+Run:
+
+bash deploy/deploy.sh
+
+
+---
+
+🧠 HOW & WHERE TO WRITE YAML FILES
+
+Job Type	Where to Write YAML
+
+🔄 Batch Job	k8s/spark-job.yaml with kind: Job
+📡 Streaming Job	Replace batch/v1 with Custom SparkApplication (optional)
+🛠 Multiple Jobs	Create new YAML: k8s/txn-job.yaml, k8s/recon-job.yaml, etc.
+🎯 Namespaces	Use dev-spark, uat-spark, prod-spark as needed.
