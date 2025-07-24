@@ -1,0 +1,240 @@
+Here is a GitHub-ready Kubernetes resource folder structure designed specifically for a Spark Engineer in the SBI ePay project, with full support for:
+
+Spark pod and service YAMLs
+
+Namespace management
+
+Volumes, ConfigMaps, Secrets
+
+Docker integration
+
+Ready to deploy in OpenShift (or Kubernetes)
+
+
+
+---
+
+📁 Folder Structure
+
+k8s-spark-resources/
+│
+├── README.md
+├── namespace/
+│   └── dev-spark-namespace.yaml
+│
+├── pods/
+│   └── spark-job-pod.yaml
+│
+├── services/
+│   └── spark-service.yaml
+│
+├── volumes/
+│   └── pvc-spark-output.yaml
+│
+├── configmaps/
+│   └── spark-configmap.yaml
+│
+├── secrets/
+│   └── spark-secret.yaml
+│
+├── docker/
+│   ├── Dockerfile
+│   └── entrypoint.sh
+│
+└── deploy-all.sh
+
+
+---
+
+📄 1. README.md (Short Project Guide)
+
+# Kubernetes Resources for Spark Engineer (SBI ePay Project)
+
+This repo includes all Kubernetes resource files to run Spark jobs inside OpenShift/Kubernetes clusters.
+
+## Components
+
+- Spark Pods
+- Services for Spark UI
+- Volumes (PVC)
+- Namespaces for environment separation
+- ConfigMaps for environment variables
+- Secrets for credentials
+
+## Deploy All
+
+```bash
+bash deploy-all.sh
+
+Or manually:
+
+kubectl apply -f namespace/
+kubectl apply -f configmaps/
+kubectl apply -f secrets/
+kubectl apply -f volumes/
+kubectl apply -f pods/
+kubectl apply -f services/
+
+---
+
+## 📄 2. `namespace/dev-spark-namespace.yaml`
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-spark
+
+
+---
+
+📄 3. pods/spark-job-pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spark-batch-job
+  namespace: dev-spark
+spec:
+  containers:
+    - name: spark-container
+      image: image-registry.openshift-image-registry.svc:5000/dev-spark/spark-batch:latest
+      ports:
+        - containerPort: 4040
+      volumeMounts:
+        - name: spark-output
+          mountPath: /opt/spark/output
+      envFrom:
+        - configMapRef:
+            name: spark-config
+        - secretRef:
+            name: spark-secret
+  volumes:
+    - name: spark-output
+      persistentVolumeClaim:
+        claimName: spark-output-pvc
+
+
+---
+
+📄 4. services/spark-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-ui
+  namespace: dev-spark
+spec:
+  type: NodePort
+  selector:
+    app: spark
+  ports:
+    - port: 4040
+      targetPort: 4040
+      nodePort: 30040
+
+
+---
+
+📄 5. volumes/pvc-spark-output.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spark-output-pvc
+  namespace: dev-spark
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+---
+
+📄 6. configmaps/spark-configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-config
+  namespace: dev-spark
+data:
+  LOG_LEVEL: DEBUG
+  APP_ENV: dev
+
+
+---
+
+📄 7. secrets/spark-secret.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: spark-secret
+  namespace: dev-spark
+type: Opaque
+data:
+  kafka-password: bXlwYXNzd29yZA==  # base64 of 'mypassword'
+
+
+---
+
+📄 8. docker/Dockerfile
+
+FROM bitnami/spark:3.4
+
+COPY entrypoint.sh /opt/entrypoint.sh
+COPY jobs/ /opt/spark/jobs/
+
+RUN chmod +x /opt/entrypoint.sh
+
+ENTRYPOINT ["/opt/entrypoint.sh"]
+
+
+---
+
+📄 9. docker/entrypoint.sh
+
+#!/bin/bash
+
+echo "Starting Spark job..."
+/opt/bitnami/spark/bin/spark-submit /opt/spark/jobs/your_spark_script.py
+
+
+---
+
+📄 10. deploy-all.sh (Run Everything)
+
+#!/bin/bash
+
+kubectl apply -f namespace/
+kubectl apply -f configmaps/
+kubectl apply -f secrets/
+kubectl apply -f volumes/
+kubectl apply -f pods/
+kubectl apply -f services/
+
+
+---
+
+✅ Instructions
+
+1. Customize Spark job image name.
+
+
+2. Update namespace if using uat-spark or prod-spark.
+
+
+3. Replace your_spark_script.py in docker/jobs/.
+
+
+
+
+---
+
+Do you want me to zip this full folder and send it to you?
+
+Or should I upload it to a GitHub repo (or give GitHub commit-ready code)?
+
