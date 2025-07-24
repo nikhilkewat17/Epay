@@ -1,0 +1,235 @@
+PART 1: UNDERSTAND OPENSHIFT + SPARK + KUBERNETES FLOW
+
+🔄 Architecture:
+
+[ Kafka / API ]
+     ↓
+[Spark Job (Batch/Streaming)]
+     ↓
+[ OpenShift Pod → Spark Driver + Executors ]
+     ↓
+[ Redshift / S3 / PostgreSQL ]
+
+🔧 Spark on OpenShift (K8s):
+
+Spark runs in cluster mode on OpenShift: Spark driver and executors are deployed as Pods.
+
+You package your Spark job as a Docker image.
+
+You use YAML (SparkApplication) to deploy the job.
+
+You use oc (OpenShift CLI) to manage everything.
+
+
+
+---
+
+🛠️ PART 2: YOUR WORKING FOLDER STRUCTURE
+
+spark-openshift-kit/
+│
+├── jobs/
+│   └── txn_processor.py
+│
+├── docker/
+│   ├── Dockerfile
+│   └── entrypoint.sh
+│
+├── k8s/
+│   ├── spark-job.yaml
+│   ├── spark-service.yaml
+│   ├── pvc.yaml
+│   ├── configmap.yaml
+│   └── secret.yaml
+│
+├── deploy/
+│   └── deploy.sh
+│
+└── README.md
+
+
+---
+
+🔧 PART 3: SETUP DOCKER IMAGE FOR SPARK JOB
+
+📄 docker/Dockerfile
+
+FROM bitnami/spark:3.4
+
+COPY entrypoint.sh /opt/entrypoint.sh
+COPY ../jobs /opt/spark/jobs
+
+RUN chmod +x /opt/entrypoint.sh
+
+ENTRYPOINT ["/opt/entrypoint.sh"]
+
+
+---
+
+📄 docker/entrypoint.sh
+
+#!/bin/bash
+/opt/bitnami/spark/bin/spark-submit \
+  --master k8s://https://kubernetes.default.svc \
+  --deploy-mode cluster \
+  --name txn-processor \
+  --conf spark.kubernetes.container.image=my-registry/spark:latest \
+  /opt/spark/jobs/txn_processor.py
+
+
+---
+
+🔃 Build & Push Image
+
+docker build -t spark:latest .
+docker tag spark:latest image-registry.openshift-image-registry.svc:5000/dev-spark/spark:latest
+docker push image-registry.openshift-image-registry.svc:5000/dev-spark/spark:latest
+
+
+---
+
+📄 PART 4: CREATE YAML TO DEPLOY SPARK JOB
+
+✨ k8s/spark-job.yaml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-batch-job
+  namespace: dev-spark
+spec:
+  template:
+    spec:
+      containers:
+      - name: spark
+        image: image-registry.openshift-image-registry.svc:5000/dev-spark/spark:latest
+        volumeMounts:
+        - name: spark-output
+          mountPath: /opt/spark/output
+        envFrom:
+        - configMapRef:
+            name: spark-config
+        - secretRef:
+            name: spark-secret
+      restartPolicy: Never
+      volumes:
+      - name: spark-output
+        persistentVolumeClaim:
+          claimName: spark-pvc
+
+
+---
+
+🔐 PART 5: CONFIGS AND SECRETS
+
+📄 k8s/configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-config
+  namespace: dev-spark
+data:
+  LOG_LEVEL: DEBUG
+  APP_ENV: dev
+
+
+---
+
+📄 k8s/secret.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: spark-secret
+  namespace: dev-spark
+type: Opaque
+data:
+  password: bXlwYXNzCg==  # base64 for "mypass"
+
+
+---
+
+💾 PART 6: STORAGE (PVC)
+
+📄 k8s/pvc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spark-pvc
+  namespace: dev-spark
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+---
+
+🌐 PART 7: SPARK UI SERVICE (OPTIONAL)
+
+📄 k8s/spark-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-ui
+  namespace: dev-spark
+spec:
+  selector:
+    app: spark
+  ports:
+    - protocol: TCP
+      port: 4040
+      targetPort: 4040
+      nodePort: 30040
+  type: NodePort
+
+
+---
+
+🚀 PART 8: DEPLOY SCRIPT
+
+📄 deploy/deploy.sh
+
+#!/bin/bash
+
+NAMESPACE=dev-spark
+
+oc project $NAMESPACE
+
+oc apply -f ../k8s/configmap.yaml
+oc apply -f ../k8s/secret.yaml
+oc apply -f ../k8s/pvc.yaml
+oc apply -f ../k8s/spark-job.yaml
+
+Run it using:
+
+bash deploy/deploy.sh
+
+
+---
+
+🛡️ PART 9: MONITORING + LOGGING
+
+# View pods
+oc get pods -n dev-spark
+
+# View logs
+oc logs <pod-name> -n dev-spark
+
+# Describe pod
+oc describe pod <pod-name> -n dev-spark
+
+Use OpenShift Web Console:
+
+View Spark job logs
+
+Access mounted volumes
+
+Check resource usage
+
+View pod restarts/crashes
