@@ -1,0 +1,114 @@
+Great! Here's a full working example to run a Spark job on OpenShift Kubernetes using spark-submit, including Dockerfile, application code, deployment YAML, and step-by-step commands.
+
+
+---
+
+✅ 1. Python Spark App (word_count.py)
+
+from pyspark.sql import SparkSession
+
+if __name__ == "__main__":
+    spark = SparkSession.builder.appName("WordCount").getOrCreate()
+    text_file = spark.read.text("input.txt")
+    word_counts = text_file.rdd.flatMap(lambda line: line.value.split()) \
+                               .map(lambda word: (word, 1)) \
+                               .reduceByKey(lambda a, b: a + b)
+    word_counts.saveAsTextFile("output")
+    spark.stop()
+
+
+---
+
+🐳 2. Dockerfile
+
+FROM bitnami/spark:3.4
+
+USER root
+COPY word_count.py /opt/spark/app/
+COPY input.txt /opt/spark/app/
+
+WORKDIR /opt/spark/app
+
+
+---
+
+🛠️ 3. Build and Push Docker Image
+
+Replace <your-registry> with your OpenShift image registry.
+
+# Login to OpenShift
+oc login ...
+
+# Build Docker image
+docker build -t <your-registry>/spark-app:latest .
+
+# Push to OpenShift registry
+docker push <your-registry>/spark-app:latest
+
+
+---
+
+📄 4. SparkApplication YAML (for OpenShift)
+
+Create spark-wordcount.yaml:
+
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: wordcount-job
+  namespace: dev-spark
+spec:
+  type: Python
+  mode: cluster
+  image: <your-registry>/spark-app:latest
+  imagePullPolicy: Always
+  mainApplicationFile: local:///opt/spark/app/word_count.py
+  sparkVersion: "3.4.0"
+  restartPolicy:
+    type: Never
+  driver:
+    cores: 1
+    coreLimit: "1200m"
+    memory: "512m"
+    serviceAccount: spark
+    labels:
+      version: 3.4.0
+  executor:
+    cores: 1
+    instances: 2
+    memory: "512m"
+    labels:
+      version: 3.4.0
+
+
+---
+
+🚀 5. Deploy Spark Job on OpenShift
+
+# Apply the YAML
+oc apply -f spark-wordcount.yaml
+
+# Monitor job status
+oc get sparkapplication wordcount-job -n dev-spark
+
+
+---
+
+📁 6. Files to Include in GitHub Repo
+
+/spark-wordcount
+  ├── Dockerfile
+  ├── word_count.py
+  ├── input.txt
+  └── spark-wordcount.yaml
+
+
+---
+
+📌 Bonus: Create OpenShift ServiceAccount for Spark
+
+oc create serviceaccount spark -n dev-spark
+
+oc adm policy add-scc-to-user privileged -z spark -n dev-spark
+
+oc adm policy add-role-to-user edit -z spark -n dev-spark
