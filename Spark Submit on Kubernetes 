@@ -1,0 +1,8 @@
+spark-submit \
+  --master k8s://https://<k8s-master-url> \
+  --deploy-mode cluster \
+  --name my-spark-job \
+  --class com.example.MyApp \
+  --conf spark.executor.instances=2 \
+  --conf spark.kubernetes.container.image=myregistry/spark:latest \
+  local:///opt/spark/app/my-app.jar
