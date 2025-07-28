@@ -1,0 +1,240 @@
+
+✅ Scenario: System is Already Live on Red Hat OpenShift (Kubernetes)
+
+You’ve joined the SBI E-Pay Spark team. The system is live. Your tools:
+
+Apache Spark (running via Spark Operator or spark-submit)
+
+Kafka (Strimzi or external)
+
+Red Hat OpenShift (Kubernetes)
+
+Monitoring tools: OpenShift console, Prometheus, Grafana, ELK, CloudWatch (if used)
+
+CI/CD (Jenkins/GitHub)
+
+Git repositories with job code
+
+
+
+---
+
+🚀 Step-by-Step Spark Engineer Workflow in Production
+
+
+---
+
+🔹 STEP 1: Access Your OpenShift Project
+
+oc login --token=<your_token> --server=<cluster_url>
+oc project dev-spark
+
+Use the OpenShift Web Console also to see:
+
+Pods
+
+SparkApplications
+
+Secrets, ConfigMaps
+
+CPU/Memory usage (Dashboard)
+
+
+
+---
+
+🔹 STEP 2: List Running Spark Jobs
+
+If using Spark Operator:
+
+oc get sparkapplications -n dev-spark
+
+This shows all deployed jobs.
+
+If using spark-submit (standalone):
+
+oc get pods -n dev-spark | grep spark
+
+You’ll see:
+
+spark-kafka-streaming-driver-xxxxx
+
+spark-kafka-streaming-executor-xxxxx
+
+
+
+---
+
+🔹 STEP 3: Check Logs of Failing or Running Jobs
+
+# View driver logs (important for debugging)
+oc logs <spark-driver-pod-name> -n dev-spark
+
+# If executor fails
+oc logs <executor-pod-name> -n dev-spark
+
+🔍 Look for errors like:
+
+OutOfMemoryError
+
+Kafka authentication issues
+
+NullPointerException
+
+OffsetOutOfRangeException
+
+
+
+---
+
+🔹 STEP 4: Verify Kafka Consumption Status
+
+Check Kafka consumer lag using:
+
+# For Strimzi
+kubectl -n kafka run kafka-consumer-groups \
+  --image=strimzi/kafka:latest \
+  --rm -it --restart=Never -- \
+  kafka-consumer-groups.sh --bootstrap-server my-kafka-bootstrap:9092 \
+  --describe --group spark-consumer-group
+
+🧠 Helps identify lags, uncommitted offsets, or wrong group IDs.
+
+
+---
+
+🔹 STEP 5: Check Resource Usage of Spark Jobs
+
+In OpenShift Console:
+
+1. Go to Monitoring → Metrics
+
+
+2. Filter by pod label spark-role=driver or spark-role=executor
+
+
+3. Metrics to monitor:
+
+CPU usage
+
+Memory usage
+
+OOM kills
+
+Restarts
+
+
+
+
+If jobs die due to low memory:
+
+executor:
+  memory: 2g
+  cores: 1
+
+Increase accordingly in YAML.
+
+
+---
+
+🔹 STEP 6: Monitoring Dashboard (Grafana/Prometheus)
+
+Prometheus Operator + Grafana dashboards usually track:
+
+Spark job runtime
+
+Kafka lag metrics
+
+JVM heap size
+
+Job count success/failure
+
+Pod restarts
+
+
+Ask DevOps to give access to:
+
+http://grafana.company-internal/spark-dashboard
+
+
+---
+
+🔹 STEP 7: Data Validation & Quality
+
+Connect to Redshift, Hive, or wherever Spark writes
+
+Run SQL checks to verify counts, nulls, duplicates
+
+Look at checkpoint directory in HDFS/S3/PVC
+
+Cross-verify Kafka event timestamps with final sink
+
+
+
+---
+
+🔹 STEP 8: Fix / Redeploy Spark Job
+
+If job fails:
+
+Edit code in Git repo (or get help from devs)
+
+Rebuild JAR / Py script
+
+Update Docker image
+
+
+docker build -t myregistry/spark-kafka-java:latest .
+docker push myregistry/spark-kafka-java:latest
+
+Apply updated Spark job YAML:
+
+
+oc delete sparkapplication kafka-stream
+oc apply -f kafka-stream.yaml
+
+
+---
+
+🔹 STEP 9: Alerting (Set up with DevOps)
+
+Ensure alerts are in place for:
+
+Alert	Trigger
+
+Spark job failure	Exit code ≠ 0
+Kafka lag > threshold	10000 messages
+Memory > 90%	OOM risk
+CPU > 90%	Resource spike
+Pod CrashLoopBackOff	Restart loops
+
+
+
+---
+
+🔹 STEP 10: Backfill or Replay Kafka Data (if needed)
+
+If a job failed and missed data:
+
+# Restart job from older offset
+oc delete sparkapplication kafka-job
+
+# Modify job config to consume from `earliest`
+oc apply -f kafka-job-replay.yaml
+
+
+---
+
+🧭 Summary: Full Spark Engineer Workflow
+
+Stage	Tool	Your Action
+
+Access	oc CLI / OpenShift UI	View namespace, pods
+Job List	oc get sparkapplications	Know what’s running
+Logs	oc logs <pod>	Debug failures
+Kafka Check	kafka-consumer-groups.sh	Check lag, offsets
+Monitoring	Prometheus/Grafana	Watch CPU, Mem, Restarts
+Data Check	Redshift/Hive/DB	Run SQL, verify pipeline
+Fix & Deploy	Git, Docker, oc apply	Update YAML, push
+Alerting	Alertmanager	Set auto-alerts
+Replay	Checkpoint offset	Backfill missing data
