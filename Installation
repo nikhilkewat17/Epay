@@ -1,0 +1,286 @@
+BI E-Pay’s payment data flow, so you don’t get lost between what Java devs do and what you do.
+
+1. Where You Fit in the Flow
+Think of the SBI E-Pay pipeline like this:
+
+Java Backend → Kafka → Spark (You) → Data Lake / DB → Reports & Dashboards
+
+Java Devs: Handle payment logic, fraud checks, API calls, and push events to Kafka.
+
+You (Spark Data Engineer): Start from Kafka (and other sources like S3 & Oracle DB) → process → store → serve for analytics.
+
+2. How You Work in the SBI E-Pay Setup
+Step 1 — Get Data Contracts from Java Team
+Ask for Kafka topic names and schema (JSON/Avro format).
+
+
+Example:
+
+Topic: payment.transactions
+
+Schema: {txn_id, amount, status, merchant_id, timestamp}
+
+Step 2 — Build Spark Streaming Job in Python
+Runs in Red Hat OpenShift as pods.
+
+Reads real-time Kafka events, processes them, and writes to data lake/reporting DB.
+
+Example:
+
+python
+Copy
+Edit
+df = spark \
+    .readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "kafka:9092") \
+    .option("subscribe", "payment.transactions") \
+    .load()
+
+parsed_df = df.selectExpr("CAST(value AS STRING) as json") \
+              .select(from_json(col("json"), schema).alias("data")) \
+              .select("data.*")
+Step 3 — Enrich & Transform
+Join with Oracle DB merchant table to add business details.
+
+Apply data validation (e.g., filter invalid amounts).
+
+Handle duplicates and late-arriving events.
+
+Step 4 — Store in Data Lake / Warehouse
+Raw → Bronze (NetApp S3)
+
+Cleaned → Silver
+
+Aggregated → Gold
+
+Write to Redshift for dashboards.
+
+Step 5 — Create Aggregation Jobs
+Batch jobs for daily settlements, reconciliation, and fraud trend analysis.
+
+These run separately from streaming jobs.
+
+Step 6 — Monitor & Alert
+Expose Spark metrics to Prometheus in OpenShift.
+
+Create Grafana dashboards for:
+
+Transaction volume per second
+
+Failure percentage
+
+Kafka consumer lag
+
+3. Where This Happens Physically
+OpenShift Kubernetes Cluster → Runs your Spark pods.
+
+NetApp S3 → Data storage.
+
+Oracle DB → Lookup tables.
+
+Redshift/Reporting DB → Final analytics store.
+
+Kafka → Real-time event source.
+
+
+
+Open CMD:
+
+CMD
+Copy code
+# Create project folder
+mkdir pyspark-vscode-demo
+cd pyspark-vscode-demo
+
+# Create venv
+python -m venv .venv
+
+# Activate venv
+.\.venv\Scripts\activate
+
+# Install PySpark and dev tools
+pip install --upgrade pip
+pip install pyspark pytest black
+
+
+
+============project path=========
+C:\Users\Cedge\pyspark-vscode-demo\src\main.py
+
+
+=========kubernetes on local=====
+kubectl cluster-info
+kubectl get nodes
+
+=======Install on Linux =========
+Alright Nikhil — here’s your **step-by-step guide to install & set up Spark + PySpark on a Linux system (Ubuntu/Debian)** for local use, including Kubernetes compatibility.
+
+---
+
+## **1. Update Your System**
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+---
+
+## **2. Install Java (Spark Needs Java 8/11)**
+
+Check if Java is already installed:
+
+```bash
+java -version
+```
+
+If not:
+
+```bash
+sudo apt install openjdk-11-jdk -y
+```
+
+Verify:
+
+```bash
+java -version
+```
+
+---
+
+## **3. Install Python & Pip**
+
+```bash
+sudo apt install python3 python3-pip -y
+```
+
+Verify:
+
+```bash
+python3 --version
+pip3 --version
+```
+
+---
+
+## **4. Install Scala (Required for Spark)**
+
+```bash
+sudo apt install scala -y
+```
+
+Verify:
+
+```bash
+scala -version
+```
+
+---
+
+## **5. Download Apache Spark**
+
+Go to [Apache Spark Downloads](https://spark.apache.org/downloads.html) or use `wget`:
+
+Example for **Spark 3.5.1 with Hadoop 3**:
+
+```bash
+wget https://downloads.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz
+```
+
+---
+
+## **6. Extract Spark**
+
+```bash
+tar xvf spark-3.5.1-bin-hadoop3.tgz
+sudo mv spark-3.5.1-bin-hadoop3 /opt/spark
+```
+
+---
+
+## **7. Set Environment Variables**
+
+Open your `.bashrc`:
+
+```bash
+nano ~/.bashrc
+```
+
+Add at the bottom:
+
+```bash
+export SPARK_HOME=/opt/spark
+export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+export PYSPARK_PYTHON=python3
+```
+
+Apply changes:
+
+```bash
+source ~/.bashrc
+```
+
+---
+
+## **8. Verify Spark Installation**
+
+Check Spark version:
+
+```bash
+spark-shell --version
+```
+
+Start PySpark:
+
+```bash
+pyspark
+```
+
+---
+
+## **9. (Optional) Install Findspark for Python Projects**
+
+```bash
+pip3 install findspark
+```
+
+You can then use PySpark inside Jupyter or VS Code:
+
+```python
+import findspark
+findspark.init()
+```
+
+---
+
+## **10. Kubernetes Mode Setup (Optional for Testing)**
+
+If you want to run Spark on Kubernetes locally:
+
+```bash
+sudo apt install docker.io -y
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Install Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# Start Minikube with Docker
+minikube start --driver=docker
+```
+
+Then you can submit Spark jobs:
+
+bash
+spark-submit \
+  --master k8s://$(minikube ip):8443 \
+  --deploy-mode cluster \
+  ...
+
+
+
+
+
+
+
