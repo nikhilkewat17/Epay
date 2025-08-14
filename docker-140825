@@ -1,0 +1,60 @@
+[root@registry improved]# cat Dockerfile_reconspark
+# Multi-stage build for better security and smaller image size
+FROM registry.dev.sbiepay.sbi:8443/openjdk:03 AS base
+
+# Set environment variables
+ENV SPARK_VERSION=4.0.0
+ENV HADOOP_VERSION=3
+ENV SPARK_HOME=/opt/spark/spark-4.0.0-bin-hadoop3/
+ENV APP_HOME=/opt/spark
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+ENV PATH=$PATH:$SPARK_HOME/bin:$JAVA_HOME/bin
+ENV CLASSPATH=/opt/spark/spark-4.0.0-bin-hadoop3/jars/
+
+USER 0
+
+# Create non-root user for security
+RUN groupadd -r spark && useradd -r -g spark spark
+
+# Install necessary packages
+# RUN microdnf update -y && \
+#     microdnf install -y curl wget tar gzip && \
+#     microdnf clean all
+
+# Copy Spark distribution
+COPY spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${APP_HOME}
+
+# Set ownership to spark user
+RUN chown -R spark:spark ${APP_HOME}/*
+RUN chmod +x ${APP_HOME}/*
+RUN chmod -R 755 ${APP_HOME}/*
+
+
+# Create necessary directories
+RUN mkdir -p /opt/spark/logs /opt/spark/events /opt/spark/conf && \
+    chown -R spark:spark /opt/spark/logs /opt/spark/events /opt/spark/conf
+
+
+# Copy application JAR
+COPY  recon-spark-job-0.1.jar  ${APP_HOME}/jars/
+COPY  merchantOrderPayment.csv ${SPARK_HOME}/
+#COPY employeeDb.csv ${SPARK_HOME}/
+
+
+RUN chown spark:spark ${APP_HOME}/jars/recon-spark-job-0.1.jar
+RUN chown -R spark:spark /opt/spark/spark-4.0.0-bin-hadoop3/bin/
+
+RUN chmod +x /opt/spark/spark-4.0.0-bin-hadoop3/bin/spark-submit && \
+    chmod -R 755 /opt/spark/*
+# Switch to spark user
+USER spark
+
+# Set working directory
+WORKDIR ${SPARK_HOME}
+
+# Expose ports
+EXPOSE 4040 8080 18080
+
+
+# Default command (can be overridden by Spark Operator)
+ENTRYPOINT ["/opt/spark/spark-4.0.0-bin-hadoop3/bin/spark-submit"]
