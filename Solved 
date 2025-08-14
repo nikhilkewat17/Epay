@@ -1,0 +1,50 @@
+# Multi-stage build for better security and smaller image size
+FROM registry.dev.sbiepay.sbi:8443/openjdk:03 AS base
+
+# Set environment variables
+ENV SPARK_VERSION=4.0.0 \
+    HADOOP_VERSION=3 \
+    SPARK_HOME=/opt/spark/spark-4.0.0-bin-hadoop3 \
+    APP_HOME=/opt/spark \
+    JAVA_HOME=/usr/lib/jvm/java-21-openjdk \
+    PATH=$PATH:/opt/spark/spark-4.0.0-bin-hadoop3/bin:/usr/lib/jvm/java-21-openjdk/bin \
+    CLASSPATH=/opt/spark/spark-4.0.0-bin-hadoop3/jars/
+
+USER 0
+
+# Create non-root user for security
+RUN groupadd -r spark && useradd -r -g spark spark
+
+# Copy Spark distribution
+COPY spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${APP_HOME}
+
+# Set ownership and permissions
+RUN chown -R spark:spark ${APP_HOME}/* \
+    && chmod +x ${APP_HOME}/* \
+    && chmod -R 755 ${APP_HOME}/*
+
+# Create necessary directories
+RUN mkdir -p /opt/spark/logs /opt/spark/events /opt/spark/conf \
+    && chown -R spark:spark /opt/spark/logs /opt/spark/events /opt/spark/conf
+
+# Copy application JAR and CSV
+COPY recon-spark-job-0.1.jar ${APP_HOME}/jars/
+COPY merchantOrderPayment.csv ${SPARK_HOME}/
+
+RUN chown spark:spark ${APP_HOME}/jars/recon-spark-job-0.1.jar \
+    && chown -R spark:spark ${SPARK_HOME}/bin/ \
+    && chmod +x ${SPARK_HOME}/bin/spark-submit \
+    && chmod -R 755 /opt/spark/*
+
+# Switch to spark user
+USER spark
+
+# Set working directory
+WORKDIR ${SPARK_HOME}
+
+# Expose ports
+EXPOSE 4040 8080 18080
+
+# Default entrypoint and job parameters
+ENTRYPOINT ["/opt/spark/spark-4.0.0-bin-hadoop3/bin/spark-submit"]
+CMD ["--class", "com.yourcompany.recon.MainClassName", "local:///opt/spark/jars/recon-spark-job-0.1.jar", "local:///opt/spark/merchantOrderPayment.csv"]
