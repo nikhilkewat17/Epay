@@ -1,0 +1,20 @@
+[epayuser@bastion binoy-3-8-25]$ oc get po -w
+NAME                   READY   STATUS   RESTARTS   AGE
+ops-service-0-driver   0/1     Error    0          4s
+ops-service-0-driver   0/1     Error    0          5s
+^C[epayuser@bastion binoy-3-8-25]$
+[epayuser@bastion binoy-3-8-25]$
+[epayuser@bastion binoy-3-8-25]$ oc logs -f ops-service-0-driver
+WARNING: Using incubator modules: jdk.incubator.vector
+25/08/14 06:11:37 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Exception in thread "main" org.apache.spark.SparkException: Failed to get main class in JAR with error 'File file:/opt/spark/spark-4.0.0-bin-hadoop3/driver does not exist'.  Please specify one with --class.
+        at org.apache.spark.deploy.SparkSubmit.error(SparkSubmit.scala:1045)
+        at org.apache.spark.deploy.SparkSubmit.prepareSubmitEnvironment(SparkSubmit.scala:546)
+        at org.apache.spark.deploy.SparkSubmit.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:961)
+        at org.apache.spark.deploy.SparkSubmit.doRunMain$1(SparkSubmit.scala:204)
+        at org.apache.spark.deploy.SparkSubmit.submit(SparkSubmit.scala:227)
+        at org.apache.spark.deploy.SparkSubmit.doSubmit(SparkSubmit.scala:96)
+        at org.apache.spark.deploy.SparkSubmit$$anon$2.doSubmit(SparkSubmit.scala:1132)
+        at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:1141)
+        at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+[epayuser@bastion binoy-3-8-25]$
