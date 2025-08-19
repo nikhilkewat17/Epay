@@ -1,0 +1,189 @@
+  643  vi Dockerfile 
+  644  docker ps
+  645  docker exec -it nginx-server /bin/bash
+  646  git
+  647  ls
+  648  cd  
+  649  pwd
+  650  ls
+  651  mkdir gitlab-testing
+  652  cd gitlab-testing
+  653  kubectl get pods
+  654  cd ..
+  655  ls -lrth
+  656  cd spark-docker
+  657  ls
+  658  cd Devops_Practice/
+  659  ls -lrth
+  660  cd Spark/
+  661  ls -lrth
+  662  spark-docker
+  663  cd spark-example
+  664  ls -lrth
+  665  kubectl apply -f spark-test-pi.yaml
+  666  kubectl get ns
+  667  spark -version
+  668  spark --version
+  669  java -version
+  670  spark-submit --version
+  671  spark-shell --version
+  672  echa $SPARK_HOME
+  673  echo $SPARK_HOME
+  674  docker
+  675  kubectl get pods
+  676  kubectl get pods -n spark-operator-controller-7d84d7998d-jpvc2 -o wide
+  677  kubectl logs spark-operator-controller-7d84d7998d-jpvc2
+  678  kubectl get pods
+  679  kubectl logs spark-operator-webhook-659c4d8854-jqrbh
+  680  kubectl get pods
+  681  kubectl exec spark-operator-controller-7d84d7998d-jpvc2 --bash
+  682  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 --bash
+  683  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 -- bash
+  684  kubectl get pods
+  685  kubectl describe pod spark-operator-controller-7d84d7998d-jpvc2 | grep Image 
+  686  kubectl exec -it spark-operator-webhook-659c4d8854-jqrbh -- bash
+  687  ls
+  688  cd Dockerfile
+  689  pwd
+  690  cd Dockerfile
+  691  cd spark-docker
+  692  ls
+  693  cd Devops_Practice
+  694  ls
+  695  cd Spark
+  696  ls
+  697  cd Spark_Cluster
+  698  ls
+  699  kubectl get pods
+  700  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 -n 
+  701  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 -n  sh 
+  702  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 -n  --sh 
+  703  #kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2
+  704  kubectl get ns
+  705  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 -n spark -- sh
+  706  kubectl get po 
+  707  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 -n spark -- bash
+  708  kubectl exec -it spark-operator-controller-7d84d7998d-jpvc2 -n spark-operator -- bash
+  709  ls
+  710  spark-submit --version
+  711  minikube ssh
+  712  minikube version
+  713  ls
+  714  cd spark-docker
+  715  ls
+  716  cd Devops_Practice
+  717  ls
+  718  cd Spark
+  719  ls
+  720  cd Spark_Cluster
+  721  ls
+  722  kubectl apply -f spark-pi.yaml
+  723  kubectl get pods
+  724  kubectl logs -f spark-operator-controller-7d84d7998d-jpvc2
+  725  kubectl describe sparkapplication spark-pi
+  726  kubectl get sparkapplications
+  727  kubectl get pods -n spark-operator
+  728  kubectl apply -f spark-pi.yaml
+  729  kubectl get sparkapplications
+  730  kubectl describe sparkapplication spark-pi
+  731  kubectl logs -f spark-operator-controller-7d84d7998d-jpvc2
+  732  ls
+  733  cat spark-pi.yaml
+  734  nano spark_pt.yaml
+  735  ls
+  736  cat spark_pt.yaml
+  737  COPY spark_pt.py /opt/spark/app/spark_pt.py
+  738  ls
+  739  cd Dockerfile
+  740  spark-submit --version
+  741  spark-shell version
+  742  echo $SPARK_HOME
+  743  kubectl get pods
+  744  nano Dockerfile1
+  745  cat Dockerfile1
+  746  docker build -t spark-app:latest .
+  747  docker images
+  748  kubectl get sparkapplications
+  749  kubectl get pod
+  750  kubectl get pods
+  751  kubectl logs spark-operator-controller-7d84d7998d-jpvc2
+  752  nano spark_pt.py
+  753  cat spark_pt.py
+  754  cat Dockerfile
+  755  nano spark-pt.yaml
+  756  ls
+  757  rm spark-pt.yam
+  758  rm spark-pt.yaml
+  759  rm -f spark-pt.yaml
+  760  cat spark_pt.yaml
+  761  ls
+  762  ll
+  763  cd Dockerfile
+  764  cat Dockerfile
+  765  cat Dockerfile1
+  766  rm -f Dockerfile1
+  767  ls
+  768  ll
+  769  cat spark_pt.yaml
+  770  nano spark-pt.yaml
+  771  nano sparl-pt.yaml
+  772  rm -f sparl-pt.yaml
+  773  nano spark-pt.yaml
+  774  docker build -t spark-app:latest
+  775  docker images | grep spark-app
+  776  minikube image load spark-app:latest
+  777  kubectl get pods -n kube-system
+  778  kubectl apply -f spark-pt.yaml
+  779  kubectl get pods
+  780  kubectl logs -f spark-operator-controller-7d84d7998d-jpvc2
+  781  ll
+  782  cat Dockerfile
+  783  nano Dockerfile
+  784  docker build -t spark-app:latest .
+  785  minikube image load spark-app:latest
+  786  docker run --rm spark-app:latest
+  787  kubectl apply -f spark-pt.yaml
+  788  kubectl get pods
+  789  kubectl logs -f spark-operator-controller-7d84d7998d-jpvc2
+  790  ls
+  791  cat spark_pt.py
+  792  ls
+  793  cat spark-pt.yaml
+  794  kubectl logs -f spark-operator-controller-7d84d7998d-jpvc2
+  795  kubectl get pods
+  796  docker run --rm spark-app:latest
+  797  ls 
+  798  cat spark_pt.yaml
+  799  cat Dockerfile
+  800  cat spark-pt.py
+  801  ll
+  802  cat spark_pt.py
+  803  cat spark-pt.yaml
+  804  docker run --rm spark-app:latest
+  805  docker run -dit --name=spark-pi spark-app:latest
+  806  docker exec -it spark-pi bash
+  807  docker ps -a
+  808  docker run -dit --name=spark-pi spark-app:latest -v ~/spark-docker/Devops_Practice/Spark/Spark_Cluster:/opt/spark/app/output/ bash
+  809  docker rm -f spark-pi
+  810  docker run -dit --name=spark-pi spark-app:latest -v ~/spark-docker/Devops_Practice/Spark/Spark_Cluster:/opt/spark/app/output/ bash
+  811  ls -lrth
+  812  cat spark_pt.py
+  813  nano spark_pt.py
+  814  docker run -dit --name=spark-pt spark-app:latest
+  815  docker run -dit --name=spark-pt spark-app:latest -v ~/spark-docker/Devops_Practice/Spark/Spark_Cluster:/opt/spark/app/output/ bash
+  816  docker run --rm spark-app:latest
+  817  ls
+  818  cat spark-pt.yaml
+  819  docker run --rm spark-app:latest
+  820  ls =lrth
+  821  ls -lrth
+  822  cat Dockerfile
+  823  docker run --rm spark-app:latest > spark.txt
+  824  cat spark.txt
+  825  ls -lrth
+  826  docker run --rm spark-app:latest 
+  827  ls -lrth
+  828  cat spark.txt
+  829  docker run --rm spark-app:latest > spark.txt
+  830  cat spark.txt
+  831  history
