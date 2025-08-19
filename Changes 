@@ -1,0 +1,8 @@
+volumes:
+  - name: spark-output
+    hostPath:
+      path: /home/cedge/devops/Devops_Practice/Spark/output   # local path on your Linux
+
+volumeMounts:
+  - mountPath: /opt/spark/app/output
+    name: spark-output
