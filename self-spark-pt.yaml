@@ -1,0 +1,43 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: spark-pt
+  namespace: default
+spec:
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: spark-app:latest
+  imagePullPolicy: IfNotPresent
+  mainApplicationFile: "local:///opt/spark/app/spark_pt.py"
+  sparkVersion: "3.5.2"
+  restartPolicy:
+    type: Never
+
+  driver:
+    cores: 1
+    coreLimit: "1200m"
+    memory: "512m"
+    serviceAccount: spark
+    labels:
+      version: 3.5.2
+    env:
+      - name: SPARK_SUBMIT_ARGS
+        value: "-c sleep infinity"
+    volumeMounts:
+      - mountPath: /opt/spark/app/output
+        name: spark-output
+
+  executor:
+    cores: 1
+    instances: 1
+    memory: "512m"
+    volumeMounts:
+      - mountPath: /opt/spark/app/output
+        name: spark-output
+
+  volumes:
+    - name: spark-output
+      hostPath:
+        path: /home/cedge/devops/Devops_Practice/Spark/output
+        type: DirectoryOrCreate
