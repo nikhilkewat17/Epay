@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-drv-1cad239860a20436-conf-map
+  namespace: spark
+data:
+  spark-defaults.conf: |
+    spark.master k8s://https://kubernetes.default.svc
+    spark.app.name spark-pi-pyspark
+    spark.executor.instances 2
+    spark.executor.memory 512m
+    spark.driver.memory 512m
+    spark.kubernetes.container.image docker.io/devensharma/sparkv:v5python
+  log4j.properties: |
+    log4j.rootCategory=INFO, console
+    log4j.appender.console=org.apache.log4j.ConsoleAppender
+    log4j.appender.console.target=System.err
+    log4j.appender.console.layout=org.apache.log4j.PatternLayout
+    log4j.appender.console.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
