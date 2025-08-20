@@ -1,0 +1,201 @@
+# ServiceAccount for spark-operator controller in spark namespace
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-spark-spark-operator-controller
+  namespace: spark
+---
+# Role with expanded permissions (including patch for services) for spark-operator-controller in spark ns
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-operator-role
+  namespace: spark
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - events
+      - services
+      - configmaps
+      - persistentvolumeclaims
+    verbs:
+      - create
+      - get
+      - watch
+      - list
+      - delete
+      - patch
+      - update
+  - apiGroups: ["batch", "extensions"]
+    resources: ["jobs"]
+    verbs:
+      - create
+      - get
+      - watch
+      - list
+      - delete
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources:
+      - sparkapplications
+      - scheduledsparkapplications
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+# RoleBinding to bind Role to spark-operator-controller ServiceAccount in spark namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-operator-role-binding
+  namespace: spark
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: spark-operator-role
+subjects:
+  - kind: ServiceAccount
+    name: my-spark-spark-operator-controller
+    namespace: spark
+---
+# Role with permissions in spark-operator namespace for spark-operator-controller ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-operator-namespace-role
+  namespace: spark-operator
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - services
+      - configmaps
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources:
+      - sparkapplications
+      - scheduledsparkapplications
+      - sparkconnects
+    verbs:
+      - get
+      - list
+      - watch
+---
+# RoleBinding to bind spark-operator-namespace-role to spark-operator-controller SA in spark namespace (cross-namespace binding)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-operator-namespace-rolebinding
+  namespace: spark-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: spark-operator-namespace-role
+subjects:
+  - kind: ServiceAccount
+    name: my-spark-spark-operator-controller
+    namespace: spark
+---
+# ClusterRole for SparkConnect CRDs (unchanged)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spark-operator-sparkconnect
+rules:
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources: ["sparkconnects"]
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+# ClusterRoleBinding for SparkConnect access (unchanged)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: spark-operator-sparkconnect-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: spark-operator-sparkconnect
+subjects:
+  - kind: ServiceAccount
+    name: my-spark-spark-operator-controller
+    namespace: spark
+---
+# ServiceAccount and Role for Spark jobs in "spark" namespace (unchanged)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spark
+  namespace: spark
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-role
+  namespace: spark
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events", "services", "configmaps", "persistentvolumeclaims"]
+    verbs: ["create", "get", "watch", "list", "delete", "patch", "update"]
+  - apiGroups: ["batch", "extensions"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "watch", "list", "delete"]
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources: ["sparkapplications", "sparkapplications/status", "scheduledsparkapplications"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-role-binding
+  namespace: spark
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: spark-role
+subjects:
+  - kind: ServiceAccount
+    name: spark
+    namespace: spark
+---
+# Event permissions for spark-operator-controller in spark-operator namespace (unchanged)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-operator-event-role
+  namespace: spark-operator
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-operator-event-rolebinding
+  namespace: spark-operator
+roleRef:
+  kind: Role
+  name: spark-operator-event-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: spark-operator-controller
+    namespace: spark-operator
