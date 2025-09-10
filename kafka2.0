@@ -1,0 +1,920 @@
+State Bank of India
+ePay 2.0
+AMQ Stream and ServiceMesh Adoption Report
+Red Hat Team
+Date Apr 7, 2025
+Revised Apr 22, 2025
+AMQ Stream and ServiceMesh Plus Adoption Report 0
+Contents
+Contents 1
+Preface 2
+Confidentiality, Copyright, and Disclaimer 2
+Trademarks 2
+Audience 2
+Additional Background and Related Documents 2
+Executive Summary 3
+Call to Action 5
+Engagement Kick-off 6
+Client Executive Sponsors 6
+Participants 6
+Schedule 8
+Document Structure & Objective 9
+Streams of Apache Kafka 10
+Observations 10
+Queries 11
+Requirements, Use cases, Challenges & Queries 11
+Recommendation 11
+Disaster recovery in an active/passive configuration 16
+Service Mesh 17
+Observations 17
+Open Queries 17
+Requirements, Use cases, Challenges & Queries 18
+Recommendation 18
+Workshop Query Tracker 28
+Streams of Apache Kafka 28
+Service Mesh 30
+Appendix 37
+Acronyms 40
+Version History 41
+References 41
+AMQ Stream and ServiceMesh Plus Adoption Report 1
+Preface
+Confidentiality, Copyright, and Disclaimer
+This is a Customer-facing document between Red Hat, Inc. and SBI (“Client” or “Customer”).
+Copyright ©2025 Red Hat, Inc. All Rights Reserved. No part of the work covered by the
+copyright herein may be reproduced or used in any form or by any means – graphic, electronic,
+or mechanical, including photocopying, recording, taping, or information storage and retrieval
+systems without permission in writing from Red Hat except as is required to share this
+information as provided with the aforementioned confidential parties.
+This document is not a quote and does not include any binding commitments by Red Hat. If
+acceptable, a formal quote can be issued upon request, which will include the scope of work,
+cost, and any customer requirements as necessary.
+Trademarks
+Trademarked names may appear throughout this document. Rather than list the names and
+entities that own the trademarks or insert a trademark symbol with each mention of the
+trademarked name, the names are used only for editorial purposes and to the benefit of the
+trademark owner with no intention of infringing upon that trademark.
+Audience
+This document is intended for the Client technical staff responsible for the environment.
+Additional Background and Related Documents
+This document does not contain step-by-step details of installation or other tasks, as they are
+covered in the relevant documentation on http://access.redhat.com/.
+Links to the appropriate documents will be made when required.
+AMQ Stream and ServiceMesh Plus Adoption Report 2
+Executive Summary
+ePay App Background: SBIePay is an online payment aggregation service provided by State
+1
+Bank of India, India's most recognised & trusted brand in banking, and the only Bank in India to
+have their own Payment Aggregation platform. ePay app’s clientele ranges from Government
+Agency, Educational Institution, Co-op Society, Corporation, Individual, Partnership firm,
+Proprietory, Public/Private Ltd, Registered Charity, Religious Organisation and Trust business
+type merchants. To read more about the app and its capabilities please visit their portal .
+2
+The ePay app platform is on a journey of modernization with the ePay 2.0 initiative.
+Microservices architecture and cloud native platform is at heart of the initiative to accelerate
+faster feature delivery, scalability for transaction peaks, workload portability, operational
+efficiencies, observability and security & compliance.
+Engagement Purpose: The bank has chosen OpenShift Container Platform Plus (that
+3
+includes OpenShift, Quay, ACS, ACM, ODF) to host, run and manage ePay 2.0 app on top of
+the cloud native infrastructure. In the current engagement; the ePay team wanted:
+1. Review the AMQ Streams design and deployment
+2. Review the Service Mesh design and deployment
+3. Understand the best practices and performance recommendations around AMQ
+Streams and Service Mesh
+Key Findings: Red Hat team spent 4 sessions (3 hours each) to understand the current design
+and implementations.
+What’s Working Well
+1. The development team has used few advanced features like Change Data Capture and
+Kafka Connect to adopt cloud native application architecture.
+2. Deployment of Streams of Apache Kafka and Service Mesh was per Red Hat
+documentation.
+Areas of Improvements/Advancements
+1. Move away from deprecated components/stack of AMQ and Service Mesh
+2. Use AMQ advanced features like cruize control for automated kafka cluster rebalance.
+3. Implement auto scaling of ingress gateway to meet the spike elasticity during peaks
+4. Attach storage to the observability stack to retain data
+3 Components of OpenShift Plus: OpenShift, Quay, Advance Cluster Security for Kubernetes, Advance Cluster Management for
+Kubernetes & Openshift Data Foundation
+2 ePay “about us”: https://www.sbiepay.sbi/secure/home#webapp1
+1 ePay details: https://www.sbiepay.sbi/secure/home
+AMQ Stream and ServiceMesh Plus Adoption Report 3
+Recommendations Summary: The team looked at the Stream of Apache Kafka and Service
+Mesh holistically and came up with 27 recommendations.
+Below table captures the relationship between product and priority.
+Product
+Recommendation bullet number
+Critical High Medium Low
+Streams of Apache Kafka 1,2,11,12 5,6,7,10 4,8 3,9
+Service Mesh 1,2,5,8,9,14 7,11,13 3,6,10,15 4,12
+AMQ Stream and ServiceMesh Plus Adoption Report 4
+Call to Action
+Based on the information shared; Red Hat recommends below as next step:
+1. Prioritize the recommendations made against Streams of Apache Kafka & Service
+Mesh in terms of impact and effort required. The prioritised items can be implemented
+before going for a Performance Test.
+2. Regular Office Hours with the Red Hat team will secure guidance for the bank’s short
+term goal to Go-Live. In the long term the forum will also help to discuss technology
+updates and product usage feedback.
+3. Next adoption workshop focusing on the platform components like OpenShift, Quay
+and ACS. This will help to establish the baseline configuration and SoP.
+AMQ Stream and ServiceMesh Plus Adoption Report 5
+Engagement Kick-off
+Client Executive Sponsors
+The following are the bank’s executive sponsor
+Name Role/Team Email
+Lakshmi Ravikumar DGM (E-Pay &
+Payment Gateway)
+dgmit.epaypg@sbi.c
+o.in
+Vishnu Gehlot ePay Application
+SPOC
+vishnu.gehlot1@sbi.co.in
+Person
+Participants
+The following participants joined
+Name Role/Team Email
+Vishnu Gehlot SBI, ePay Manager vishnu.gehlot1@sbi.co.in
+Binoy Medhi Cedge, Solution Architect binoy.medhi.cedge@sbi.co.in
+Sourabh Dutta sourabh.dutta@sbi.co.in
+Niraj Kundu SBI, Meghdoot Manager niraj.kundu@sbi.co.in
+Prabhakar Thakur prabhakar.thakur1@sbi.co.in
+Mahesh Bankar Cedge, Architect mahesh.bankar.cedge@sbi.co.in
+Devdatt Gavhane Cedge, Platform Architect devdatt.gavhane.cedge@sbi.co.in
+Neeraj Durgapal Cedge, App team neeraj.durgapal.cedge@sbi.co.in
+Devendra Sharma Cedge, Infra devendra.sharma.cedge@sbi.co.in
+AMQ Stream and ServiceMesh Plus Adoption Report 6
+Deepak Mishra Red Hat , RE Deepak Mishra
+Red Hat Team
+Name Role Email
+Rony Mathew Account Executive Rony Mathew
+Amit Samant Account Solution Architect Amit Samant
+Manish Pandey Specialist Adoption Architect Manish Pandey
+Shailendra Kumar Singh Specialist Adoption Architect Shailendra Kumar Sin…
+Rajiv Ranjan Principal Specialist Adoption Architect Rajiv Ranjan
+Priyadarshini Customer Success Executive Priyadarshini
+Tim Howard Senior Manager, Specialist Adoption
+Architects
+Tim Howard
+John JongBae Ko Director, Customer Success John JongBae Ko
+Ryan del Rosario Director, Specialist Adoption Architects Ryan del Rosario
+Ameeta Roy Senior Director, APAC SA and Adoption
+Leader
+Ameeta Roy
+AMQ Stream and ServiceMesh Plus Adoption Report 7
+Schedule
+AMQ Stream and ServiceMesh Plus Adoption Report 8
+Document Structure & Objective
+The document covers the Streams for Apache Kafka & OpenShift Service Mesh best practices
+adopted by large BFSI customers across APAC. Best practices have been contextualised for
+State Bank of India’s ePay 2.0 architecture & requirements. The document has two major
+sections:
+1. Streams for Apache Kafka
+2. OpenShift Service Mesh
+Each of these high level sections has further technical subsections covering aspects like
+storage, network, security etc. Each of these subsections have been structured to contain:
+● Observations: Summarizes the observations recorded during the workshop.
+● Open Queries: List of unanswered questions raised during the workshop.
+● Requirements, Use Cases & Challenges: Both SBI and C-Edge shared requirements
+and challenges faced.
+● Recommendations: Best practices and solutions blue prints are shared to address the
+requirements and challenges
+AMQ Stream and ServiceMesh Plus Adoption Report 9
+Streams of Apache Kafka
+Observations
+1. AMQ Streams version 2.6 has been deployed on the OCP version 4.14.
+2. The OpenShift Container Platform (OCP) is planned to be upgraded to version 4.16 in
+the near future.
+3. AMQ Streams (Kafka) has been deployed across the DEV, SIT, and UAT environments, all
+running on a single OCP cluster.
+4. The Kafka producer and consumer, developed using Java 21, are currently running locally
+within the same cluster. In the future, there are plans to expose Kafka externally to
+outside OCP clusters.
+5. The application, ePay 2.0, is built using Spring Boot and is targeted for go-live in May
+2025.
+6. Below are the high-level details of each AMQ Streams cluster.
+7. MirrorMaker 2 is not currently configured for data replication across the datacenter.
+8. The application team is planning to use Kafka Connect for streaming use cases and is
+currently exploring solutions for integrating with the database.
+9. For monitoring purposes, AMQ Streams has been integrated with grafana.
+10. Zookeeper has been deployed on the DEV and SIT environments to manage Kafka
+broker coordination and metadata.
+AMQ Stream and ServiceMesh Plus Adoption Report 10
+# Kafka Cluster OCP Cluster Data Center Status
+1 Dev
+Non-Prod DR(Hyderabad)
+Deployed
+2 SIT Deployed
+3 UAT In progress
+4 Pre-Prod Pre-Prod
+DC(Mumbai)
+In progress
+5 PROD PRO In progress
+6 Pre-Prod(DR) Pre-Prod(DR)
+DR(Hyderabad)
+In progress
+7 PROD(DR) PROD(DR) In progress
+11. Microsegmentation via network policies is currently not configured on the OpenShift
+cluster.
+12. The OpenShift cluster is configured with the NetApp Trident CSI driver for dynamic PVC
+storage allocation.
+Queries
+1. Share the performance test results upon completion.
+Requirements, Use cases, Challenges & Queries
+Recommendation
+1. AMQ Streams version 2.9 is the last release to support ZooKeeper
+4
+. Starting from
+version 3.x, ZooKeeper will be removed, and it is highly recommended to adopt KRaft
+(Kafka Raft mode) with version 2.9 in preparation for this change.
+4
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/release_notes_for_streams_for_ap
+ache_kafka_2.9_on_openshift/index#kafka_3_9_0_support
+AMQ Stream and ServiceMesh Plus Adoption Report 11
+# Type
+(MoSCoW)
+Requirement / Use Case
+1 Must Ability to run active passive across the datacenter
+2 Must Ability to automatically trigger broker or topic rebalancing
+3 Should Ability to Horizontal scalability within a cluster
+4 Should Ability to monitor topic, partition and consumers
+5 Should Ability to monitor kafka and KRaft resource
+6 Could Ability to rebalance a cluster based on predefined constraints.
+7 Could Ability to auto creation and deletion of topic
+2. To deploy Kafka clusters in KRaft (Kafka Raft metadata) mode without ZooKeeper, the
+Kafka custom resource must include the annotation strimzi.io/kraft="enabled", and
+you must use KafkaNodePool resources to manage the configuration of groups of
+nodes.
+3. Use KafkaTopic resource to configure topics, including partition and replication factor
+5
+settings. When you create, modify, or delete a topic using KafkaTopic, the Topic
+Operator ensures that these changes are reflected in the Kafka cluster.
+4. Integrating with the Red Hat build of Debezium to change data capture. The Red Hat
+6
+build of Debezium is a distributed change data capture platform. It captures row-level
+changes in databases, creates change event records, and streams the records to Kafka
+topics. Debezium is built on Apache Kafka.
+6 Debezium https://docs.redhat.com/en/documentation/red_hat_build_of_debezium/2.7.3
+5 KafkaTopic
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/streams_for_apache_kafka_api_ref
+erence/index#type-KafkaTopic-reference
+AMQ Stream and ServiceMesh Plus Adoption Report 12
+KRaft (Kafka Raft metadata) mode replaces Kafka’s dependency on ZooKeeper for
+cluster management. KRaft mode simplifies the deployment and management of Kafka
+clusters by bringing metadata management and coordination of clusters into Kafka.
+The Topic Operator uses Cruise Control to make the necessary changes, so Cruise
+Control must be deployed with Streams for Apache Kafka.
+Debezium has multiple uses, including:
+1. Data replication
+2. Updating caches and search indexes
+3. Simplifying monolithic applications
+4. Data integration
+5. Enabling streaming queries
+5. Use Kafka Connect to stream data between Kafka and external systems. Kafka Connect
+7
+provides a framework for moving large amounts of data while maintaining scalability and
+reliability. Kafka Connect is typically used to integrate Kafka with database, storage, and
+messaging systems that are external to your Kafka cluster.
+6. Use Cruise Control for cluster rebalancing: Automating Kafka operations, such as
+8
+monitoring cluster workload, rebalancing a cluster based on predefined constraints, and
+detecting and fixing anomalies. It consists of four main components—the Load Monitor,
+the Analyzer, the Anomaly Detector, and the Executor—and a REST API for client
+interactions.
+7. Configure distributed tracing facilitates end-to-end tracking of messages: from source
+9
+systems to Kafka, and then from Kafka to target systems and applications. This
+complements the monitoring of metrics in Grafana dashboards and component loggers.
+9 Tracing
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/deploying_and_managing_streams
+_for_apache_kafka_on_openshift/index#assembly-distributed-tracing-str
+8 Cruise Contorl
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/deploying_and_managing_streams
+_for_apache_kafka_on_openshift/index#cruise-control-concepts-str
+7 Kafka Connect
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/deploying_and_managing_streams
+_for_apache_kafka_on_openshift/index#con-kafka-connect-config-str
+AMQ Stream and ServiceMesh Plus Adoption Report 13
+Kafka Connect is an integration toolkit for streaming data between Kafka brokers and
+other systems. The other system is typically an external data source or target, such as a
+database.
+Streams for Apache Kafka provides built-in support for tracing for the following Kafka
+components:
+1. MirrorMaker to trace messages from a source cluster to a target cluster
+2. Kafka Connect to trace messages consumed and produced by Kafka Connect
+8. Use JBOD (Just a Bunch of Disks) storage which allows you to configure your Kafka
+10
+cluster to use multiple disks or volumes as persistent storage. using JBOD allows for
+future scaling by adding more volumes as needed, and that is why it is always
+recommended.
+9. During performance testing, Red Hat recommends fine-tuning Kafka's performance by
+leveraging the various configuration properties outlined in the Kafka tuning guide .
+11
+10. Monitoring your cluster using Console , The Streams for Apache Kafka Console
+12
+provides a user interface to facilitate the administration of Kafka clusters, delivering
+real-time insights for monitoring, managing, and optimizing each cluster from its user
+interface.
+11. Production-ready Kafka cluster Pods details
+12Console
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html/using_the_streams_for_apache_kafka_co
+nsole/index
+11 Tuning guide
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/kafka_configuration_tuning/index
+#con-config-tuning-intro-str
+10 Storage
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/deploying_and_managing_streams
+_for_apache_kafka_on_openshift/index#assembly-storage-str
+AMQ Stream and ServiceMesh Plus Adoption Report 14
+3. Kafka Bridge to trace messages between Kafka and HTTP client applications
+Persistent, ephemeral, and JBOD storage types cannot be changed after a Kafka cluster
+is deployed. However, you can add or remove volumes of different types from the JBOD
+storage. You can also create and migrate to node pools with new storage specifications.
+Component # of nodes/pods vCPU (per pod) RAM (per pod) Disk (per pod)
+KRaft controllers At least 3 4+ vcpu 8GB+ 64GB+
+Kafka brokers At least 3 12+ vcpu 64GB+
+13 1TB+
+Cruise Control 1 1 vcpu 0.5 GB n/a
+12. The AMQ Streams Kafka Custom Resource (CR) YAML used for deployment should
+include the following parameters from day one.
+# Parameter Value* Descriptions
+1 CPU/Memory
+resource
+As per design Configure the resource request and limit for both Kafka
+and KRaft.
+2 KRaft N/A Deploy Kraft instead of Zookeeper,
+3 min.insync.replicas 2 or more minimum number of in-sync replicas that must
+acknowledge a write (produce request) for it to be
+considered successful.
+4 ack all The Kafka producer will wait for acknowledgments from
+all in-sync replicas (ISRs) before marking the write as
+successful.
+5 terminationGracePeri
+odSeconds
+>60s The container has up to terminationGracePeriodSeconds
+to finish up tasks and shut down gracefully.
+13 Only 6-8GB should be allocated as JVM memory. The JVM memory configuration should be done in the
+custom resource used to deploy the cluster. For more information see the documentation.
+AMQ Stream and ServiceMesh Plus Adoption Report 15
+The above CPU and memory values are preliminary estimates based on data shared
+during the workshop. Final configurations will be determined post load testing.
+6 Cruise Control N/A Optimization goals define objectives for rebalancing,
+such as distributing topic replicas evenly across brokers.
+7 Storage As per design Configure JBOD disk using the PVC for both KRaft and
+Kafka broker.
+8 default.replication.fac
+tor
+3 default number of replicas for new topics that are
+auto-created
+*Tune the value during your performance test.
+13. Configure MirrorMaker 2 in unidirectional replication to replicate data across
+14
+datacenters in an Active/Passive setup. To maintain consistent topic names across
+clusters, use the IdentityReplicationPolicy in the MirrorMaker 2 configuration.
+Disaster recovery in an active/passive configuration
+MirrorMaker 2 will be configured for active/passive disaster recovery. To support this, the Kafka
+cluster should also be monitored for health and performance to detect issues that require
+failover promptly.
+14MirrorMakker2
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/deploying_and_managing_streams
+_for_apache_kafka_on_openshift/index#unidirectional_replication_activepassive
+AMQ Stream and ServiceMesh Plus Adoption Report 16
+Follow these best practices for disaster recovery in the event of failure of the active cluster in an
+active/passive configuration:
+1. Promote the passive recovery cluster to an active role.
+2. Redirect applications to the new active recovery cluster.
+3. Remove the MirrorMaker 2 configuration for replication from the original active cluster to
+the passive cluster.
+4. Re-create the failed cluster in a clean state, adhering to the original configuration.
+5. Deploy a new MirrorMaker 2 instance to replicate data from the active recovery cluster
+to the rebuilt cluster.
+6. Ensure the rebuilt cluster mirrors all data from the now-active recovery cluster.
+7. (Optional) Promote the rebuilt cluster back to active status by redirecting applications to
+the rebuilt cluster, after ensuring it is fully synchronized with the active cluster.
+AMQ Stream and ServiceMesh Plus Adoption Report 17
+Refer to the detailed steps in the documentation for the recovery process.
+https://strimzi.io/docs/operators/in-development/full/deploying.html#con-mm2-recovery-str
+Service Mesh
+Observations
+1. Service Mesh Version 2.6 is deployed on OpenShift 4.14 version
+2. Service Mesh federation is not in use and there is no such requirement in near future.
+3. Multi tenant Mesh is in use currently i.e dev, sit and uat mesh are used in same OpenShift
+cluster .
+4. Ingress and Egress gateway are running with single replicas so no high availability.
+5. No Horizontal Pod Autoscaler(HPA) configured for Service mesh Control plane .
+6. Persistent Volume is not present for Elastic Search and grafana so there is a mechanism
+currently to persist data .
+7. The Red Hat OpenShift distributed tracing platform operator (Jaeger) 1.57.0-7 is
+deployed in the cluster.
+8. Current Observability stack in use is Jaegar , Kiali , prometheus and grafana.
+9. A Service Mesh control plane is deployed on the worker node .
+10. Communication between the microservice part of mesh is using mtls and certificate
+signed by istiod i.e self signed certificate.
+11. Service Mesh Istio OpenShift Routing (IOR) is disabled and routes are created manually .
+12. Canary Deployment of microservice is not in use currently but there is plan to achieve
+the same in future through Service Mesh.
+13. Currently there is no requirement to use egress gateway for outgoing traffic from mesh.
+14. Circuit breaking and retry is currently planned to be handled in application code rather
+than using Service Mesh .
+Open Queries
+1. Do the application services collect and propagate B3 headers from incoming requests to
+outgoing requests?
+Requirements, Use cases, Challenges & Queries
+AMQ Stream and ServiceMesh Plus Adoption Report 18
+# Type
+(MoSCo
+W)
+Requirement / Use Case
+1 Must Ability to configure mTLS (mutual TLS) to secure traffic between
+microservices (MS-to-MS).
+Recommendation
+1. Configuring the Red Hat OpenShift distributed tracing platform (Tempo) and the Red
+15
+Hat build of OpenTelemetry for distributed tracing. You can expose tracing data to the
+Red Hat OpenShift distributed tracing platform (Tempo) by appending a named element
+and the opentelemetry provider to the spec.meshConfig.extensionProviders
+specification in the ServiceMeshControlPlane. Then, a telemetry custom resource
+configures Istio proxies to collect trace spans and send them to the OpenTelemetry
+Collector endpoint.
+a. Starting with Red Hat OpenShift Service Mesh 2.5, Red Hat OpenShift
+distributed tracing platform (Jaeger) and OpenShift Elasticsearch Operator are
+deprecated and will be removed in a future release.
+2. Integrating with user-workload monitoring for production, By default, Red Hat
+16
+OpenShift Service Mesh (OSSM) installs the Service Mesh control plane (SMCP) with a
+dedicated instance of Prometheus for collecting metrics from a mesh. However,
+production systems need more advanced monitoring systems, like OpenShift Container
+16 Monitoring
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html-single/service_mesh/index#ossm-integratingwith-user-workload-monitoring_observability
+15 Tempo
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html-single/service_mesh/index#ossm-overview-di
+str-tracing_observability
+AMQ Stream and ServiceMesh Plus Adoption Report 19
+2 Must Ability to observe traffic flow
+3 Must Management of Incoming traffic
+4 Must Allow and Deny api endpoint in different services
+5 Should Canary Deployment in future
+6 Must Sizing for Service Mesh control plane
+7 Should Access log enablement on gateway to track srp ip ,dest ip etc.
+8 Should Rate limit of microservice
+9 Should Service mesh control plane deployment node
+10 Must Circuit breaking /retry mechanism in mesh
+Platform monitoring for user-defined projects. Platform engineers can configure custom
+alerts on top of metrics collected by the user workload prometheus.
+17
+3. Deploy OpenShift Service Mesh Console plugin that provides visibility into your Service
+18
+Mesh. With the OSSMC plugin installed, a new Service Mesh menu option is available in
+the navigation menu on the left side of the web console, as well as new Service Mesh tabs
+that enhance the existing Workloads and Services console pages.
+4. Set up a ServiceEntry to enable external communication from the Service Mesh. This
+19
+configuration explicitly declares external services as part of the mesh, allowing secure
+and controlled access from within the mesh to external resources.
+5. Access the Kiali console to visualize your application's topology, monitor its health, and
+analyze key metrics. If your service is experiencing problems, the Kiali console lets you
+view the data flow through your service. You can view insights about the mesh
+components at different levels, including abstract applications, services, and workloads.
+Kiali also provides an interactive graph view of your namespace in real time.
+6. By default, Kiali will exclude the following workloads: DeploymentConfig,
+ReplicationController, Statefulsets, CronJob, Job.In case you want to include these
+workload in kiali dashboard then configure kubernetes configuration entry in kiali CR in
+control plane namespace to change the workloads exclusion list so Kiali will recognize the
+desired workload types to monitor.
+19 ServiceEntry
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html-single/service_mesh/index#ossm-routing-ser
+vice-entries_traffic-management
+18 Alert
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html-single/monitoring/index#creating-new-alertin
+g-rules_managing-alerts
+17 Monitoring
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html-single/service_mesh/index#ossm-integratingwith-user-workload-monitoring_observability
+AMQ Stream and ServiceMesh Plus Adoption Report 20
+AMQ Stream and ServiceMesh Plus Adoption Report 21
+7. To correctly detect your workload in Kiali, you must have both version and app labels on
+the pod template of your workload resource (Deployment, Deploymentconfig,
+Statefulset, etc).
+8. Although Istio can detect protocol used by services, sometime it could fail to find the
+protocol which prevents any communication to the services.It is crucial to give the
+protocol name explicitly on every port label of your services comprised in your data
+plane:
+AMQ Stream and ServiceMesh Plus Adoption Report 22
+AMQ Stream and ServiceMesh Plus Adoption Report 23
+Python
+9. Adjust the resource limits for the Service Mesh components based on the load test
+results. For instance, the following settings are tailored for 1,000 services handling
+20
+1,000 requests per second. Update the CPU and memory values in the
+ServiceMeshControlPlane configuration as needed to match your workload
+requirements.
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+ name: basic
+ namespace: istio-system
+spec:
+20 Performance and scalability
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html-single/service_mesh/index#ossm-performanc
+e-scalability
+AMQ Stream and ServiceMesh Plus Adoption Report 24
+ version: v2.6
+ proxy:
+ runtime:
+ container:
+ resources:
+ requests:
+ cpu: 600m
+ memory: 50Mi
+ limits: {}
+ runtime:
+ components:
+ pilot:
+ container:
+ resources:
+ requests:
+ cpu: 1000m
+ memory: 1.6Gi
+ limits: {}
+ kiali:
+ container:
+ resources:
+ limits:
+ cpu: "90m"
+ memory: "245Mi"
+ requests:
+ cpu: "30m"
+ memory: "108Mi"
+ global.oauthproxy:
+ container:
+ resources:
+ requests:
+ cpu: "101m"
+ memory: "256Mi"
+ limits:
+ cpu: "201m"
+ memory: "512Mi"
+AMQ Stream and ServiceMesh Plus Adoption Report 25
+10. Do not keep spec.servers.hosts as *(wildcard) since it will allow wildcard domain
+incoming traffic inside mesh . Also it is recommended to use https on gateway as best
+practice.
+11. Configure autoscaling for Service Mesh component based on performance testing using
+article https://access.redhat.com/solutions/7003274 .
+12. It is recommended to run Service Mesh control plane on infra node since Red Hat do not
+charge subscription for infra node.
+13. It is advisable to enable mtls in service mesh but it also depends on customer use case if
+their workload do not function properly with mtls then they can keep it in permissive
+mode. By default, Istio tracks the server workloads migrated to Istio proxies, and
+configures client proxies to send mutual TLS traffic to those workloads automatically,
+and to send plain text traffic to workloads without sidecars. Thus, all traffic between
+workloads with proxies uses mutual TLS, without you doing anything.While Istio
+automatically upgrades all traffic between the proxies and the workloads to mutual TLS
+between, workloads can still receive plain text traffic.
+AMQ Stream and ServiceMesh Plus Adoption Report 26
+14. It is advisable to migrate to Service Mesh 3 before moving to production, as it aligns
+more closely with upstream Istio and represents the strategic direction forward.
+15. Upgrading a service mesh 3 may impact application workloads and traffic, thus, it’s
+important to choose a strategy appropriate for the workloads that make up the mesh.
+The simplest approach is called “in place”, where the Istio control plane is updated after a
+restart, and then all proxies (sidecars and gateways) are updated with a restart. This is
+simple, but “all or nothing” if there are challenges encountered during the upgrade.
+“Revision based” involves the new Istio control plane being deployed alongside the
+existing control plane, allowing applications to be incrementally migrated to the new
+workloads by adjusting workload/namespace labels (Or IstioRevisionTag) configuration.
+AMQ Stream and ServiceMesh Plus Adoption Report 27
+This is more complex, but it is helpful for highly critical applications where extra peace of
+mind is desired across upgrades to ensure no downtime.
+AMQ Stream and ServiceMesh Plus Adoption Report 28
+Python
+Workshop Query Tracker
+Streams of Apache Kafka
+1. Which version of Debezium is compatible with AMQ Streams 2.9? Red Hat build of
+Debezium Supported Configurations
+Response: The Red Hat build of Debezium 3.0, scheduled for release by April 2025, will
+include support for AMQ Streams 2.9 (Kafka 3.9).
+2. What is the process to configure OpenShift OAuth integration with the Kafka Console?
+Response: Currently Kafka Console can only be integrated with OIDC provider like
+Keyclock and dex for RBAC . RFE has been raised to the Integration Kafka console with
+OCP aouth.
+3. Could you provide suggestions or recommendations on the following consumer
+parameters we're currently using?
+consumer:
+ groupId: merchant-consumers
+ autoOffsetReset: latest
+ autoCommitInterval: 100
+ enableAutoCommit: true
+ sessionTimeoutMS: 300000
+ requestTimeoutMS: 420000
+ fetchMaxWaitMS: 200
+ maxPollRecords: 5
+ retryMaxAttempts: 3
+ retryBackOffInitialIntervalMS: 10000
+ retryBackOffMaxIntervalMS: 30000
+ retryBackOffMultiplier: 2
+ numberOfConsumers: 1
+AMQ Stream and ServiceMesh Plus Adoption Report 29
+Response: When tuning your consumers your primary concern will be ensuring that they
+cope efficiently with the amount of data ingested. Optimizing consumer parameters is highly
+use-case dependent and should be tailored based on workload characteristics and application
+requirements
+Offset reset policy
+Setting the appropriate offset policy ensures that the consumer consumes messages from the
+desired starting point and handles message processing accordingly. The default Kafka reset
+value is latest, which starts at the end of the partition, and consequently means some
+messages might be missed, depending on the consumer’s behavior and the state of the
+partition. Setting auto.offset.reset to earliest ensures that when connecting with a new group.id,
+all messages are retrieved from the beginning of the log.
+enableAutoCommit and autoCommitInterval: 100
+This parameter controls whether the consumer automatically commits offsets of messages it
+has received. If set to true, the consumer will periodically commit the offsets of messages it has
+polled. Commits offsets every 100ms.
+Generally avoid enableAutoCommit true, If the consumer auto-commits the offset before the
+processing is complete, and then the app crashes, the message is considered processed and
+won’t be re-delivered — leading to data loss.
+Refer to the Consumer section in the Kafka Tuning Guide for more details.
+21
+4. Should Kafka brokers and KRaft controllers be hosted on dedicated worker nodes in an
+OpenShift cluster?
+Response: Since the OpenShift cluster is dedicated to the ePay application, it is
+recommended not to bind the Kafka cluster to specific nodes. Instead, configure appropriate
+21Tuning Guide
+https://docs.redhat.com/en/documentation/red_hat_streams_for_apache_kafka/2.9/html-single/kafka_configuration_tuning/index
+#con-consumer-config-properties-str
+AMQ Stream and ServiceMesh Plus Adoption Report 30
+Refer the sample configuration files for all the Kafka components, download and extract
+the files from the Streams for Apache Kafka software downloads page.
+https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=dis
+tributions&product=jboss.amq.streams
+CPU and memory requests and limits, allowing the pods to move and scale dynamically across
+the cluster.
+5. How to configure Mirror maker to use a dedicated line/NIC to use replication?
+Response: Openshift supports multiple networks by leveraging the Multus CNI plugin
+22
+. With Multus, multiple CNI plugins such as ipvlan, macvlan, or Network Attachment
+Definitions can be used together to serve as secondary networks for pods. POD needs
+to use the “k8s.v1.cni.cncf.io/networks: l2-network” annotation for the
+network attachment.
+We are checking internally how this can be added to the Kafka Mirror maker.
+Service Mesh
+1. Question: How can we implement traffic control policies to allow or deny
+communication between different microservices, and manage external access through a
+single centralized gateway, ensuring secure and controlled access to specific API
+endpoints?
+Response: In Service Mesh, you can use an Istio Ingress Gateway to manage all external
+traffic entering the mesh:
+● Define a Gateway resource to configure which hosts/ports the gateway should expose.
+● Use VirtualService to route incoming traffic to the appropriate services based on
+hostname, URI, headers, etc.
+● This centralizes control of incoming requests and allows fine-grained routing and
+filtering.
+Service Mesh enables strict control over east-west traffic (service-to-service) using:
+● PeerAuthentication – to enforce mutual TLS between services
+● AuthorizationPolicy – to allow or deny calls between services
+22Multus CNI
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/networking/multiple-networks#understanding
+-multiple-networks
+AMQ Stream and ServiceMesh Plus Adoption Report 31
+2. Question: How can we implement end-to-end traceability across microservices within
+the Istio service mesh to monitor, visualize, and troubleshoot request flows effectively?
+Response: Traceability in Service Mesh can be achieved using observability tools like
+Kiali, Jaeger/ Tempo UI, and User Workload Monitoring. Kiali provides real-time service graph
+visualizations, Jaeger/Tempo enables distributed tracing, and User Workload Monitoring offers
+detailed metrics, together delivering end-to-end visibility and faster troubleshooting across the
+mesh.
+3. Question: How can we effectively implement Canary deployments in a Service Mesh to
+progressively roll out new versions of services while minimizing risks and ensuring a
+smooth user experience?
+Response: Canary deployments are a key capability within a Service Mesh, allowing
+teams to gradually roll out new service versions with minimal risk. The Service Mesh enables this
+through several features:
+● Traffic Splitting: Using VirtualService resources, a Service Mesh can direct a percentage
+of traffic to the new version while the rest of the traffic continues to hit the stable
+version. This allows for testing in production with a controlled exposure to new changes.
+● Automated Rollbacks: By integrating with observability tools like Kiali, Prometheus, and
+Jaeger, a Service Mesh provides real-time monitoring of the canary version’s
+performance. If issues arise, automated rollbacks can be triggered, quickly reverting the
+changes.
+● A/B Testing & Metrics: With the built-in metrics and tracing, teams can monitor how the
+canary version is performing, compare it to the stable version, and make informed
+decisions about promoting it to full production or rolling it back.
+4. Question: How can we leverage mTLS and rate limiting within a Service Mesh to ensure
+secure, encrypted communication and protect services from abuse or overload?
+Response: By default, Istio tracks the server workloads migrated to Istio proxies, and
+configures client proxies to send mutual TLS traffic to those workloads automatically, and to
+send plain text traffic to workloads without sidecars. Thus, all traffic between workloads with
+proxies uses mutual TLS, without you doing anything. While Istio automatically upgrades all
+traffic between the proxies and the workloads to mutual TLS between, workloads can still
+receive plain text traffic.If this behavior is not desired, you have to configure
+AMQ Stream and ServiceMesh Plus Adoption Report 32
+spec.security.dataPlane.mtls setting on ServiceMeshControlPlane CR to enforce mutual TLS
+mode.
+Rate limit can be achieved using Envoy filter but Red Hat do not support Envoy filter in Service
+Mesh hence not recommended . It is recommended to implement rate limit outside of mesh .
+5. Question: How to implement access log to check src ip, dest ip ,etc of incoming traffic in
+service Mesh?
+Response: The article to enable access log in service mesh is
+https://access.redhat.com/solutions/5127991.
+6. Question: Is a Service Mesh necessary for our architecture, or can we achieve sufficient
+control and routing with standard ingress controllers or an API Gateway?
+Response: While traditional Ingress controllers and API Gateways provide basic routing,
+rate limiting, and authentication at the edge, a Service Mesh goes beyond that by enabling
+fine-grained control, security, and observability for internal (east-west) traffic between
+microservices.
+Here’s how they differ:
+API Gateway / Ingress:
+● Manages north-south traffic (external to internal)
+● Handles routing, SSL termination, and basic auth at the edge
+● Suitable for simpler, smaller architectures
+Service Mesh:
+● Manages east-west traffic (between internal services)
+● Provides mTLS, zero-trust security, fine-grained traffic routing, observability (tracing,
+metrics, logs), fault injection, and policy enforcement
+● Essential in microservices or multi-team environments where service-to-service
+communication needs to be secured, monitored, and managed centrally
+AMQ Stream and ServiceMesh Plus Adoption Report 33
+In conclusion, if your architecture is growing in complexity or you need zero-trust security, traffic
+control, and deep observability across services, a Service Mesh is the right choice. For smaller,
+simpler apps, an API Gateway may suffice—but it won’t provide full internal traffic management.
+7. Question: Why should we consider upgrading to Service Mesh v3 over v2? What are the
+key differences and benefits?
+Response: Upgrading to Service Mesh v3 is recommended as it aligns more closely with
+the latest upstream Istio versions, ensuring compatibility, security, and long-term support.
+Key differences and benefits of v3 over v2 include:
+● Upstream Alignment: v3 tracks closely with upstream Istio, bringing in the latest
+features, performance improvements, and security patches faster.
+● Improved Lifecycle Management: Easier upgrades and better compatibility with modern
+Kubernetes versions.
+● New Capabilities: v3 often includes support for updated APIs, enhanced observability,
+and more robust policy handling.
+● Long-Term Support: v2 may be approaching deprecation or end of life, while v3 is the
+strategic direction forward.
+In short, Service Mesh v3 is better positioned for future growth, platform compatibility, and
+feature advancement compared to v2.
+8. Question: Where should the Service Mesh Operator be installed in terms of node
+placement and Kubernetes namespace?
+Response: The Service Mesh Operator should be installed in a dedicated namespace (
+openshift-operators namespace), and it runs as a Kubernetes controller, not tied to a specific
+node.
+9. Question: Where should the ServiceMeshControlPlane be installed in terms of
+namespace and node placement?
+Response: The ServiceMeshControlPlane should be installed in a dedicated
+namespace, commonly something like istio-system or a namespace of your choice, depending
+on how your environment is structured.
+Namespace:
+AMQ Stream and ServiceMesh Plus Adoption Report 34
+● Create and install it in a dedicated namespace (e.g., istio-system) to isolate control plane
+components from workloads and simplify management.
+Node Placement:
+● It is recommended to run control plane components on infra nodes to:
+○ Avoid Red Hat subscription fees, as infra nodes typically do not consume
+entitlements.
+○ Separate system components from user workloads for performance and stability.
+10. Question: Should we use Jaeger or Tempo for distributed tracing in our Service Mesh?
+Response: Jaeger is deprecated, so it is recommended to use Tempo.
+11. Question: What is the recommended sizing for the ServiceMeshControlPlane deployed
+in the istio-system namespace?
+Response: Refer to the recommendations section above for guidance on sizing of the
+ServiceMeshControlPlane.
+12. Question: What is the appropriate replica count to set in the ServiceMeshControlPlane
+(SMCP)?
+Response: The appropriate replica count for the ServiceMeshControlPlane (SMCP)
+should be based on the results of your Performance Testing (PT), ensuring that the system can
+handle the expected traffic load and performance requirements efficiently.
+Key Steps:
+● Set the Initial Replica Count Based on PT Results:
+○ After analyzing the PT results, we recommend setting the number of replicas for
+the ingress gateway based on the observed traffic patterns and load.
+● Configure Autoscaling for Dynamic Scaling:
+○ Horizontal Pod Autoscaling (HPA) can be used to automatically scale the ingress
+gateway up or down based on specific resource usage metrics (e.g., CPU
+utilization).
+AMQ Stream and ServiceMesh Plus Adoption Report 35
+Based on the PT results, we can adjust the autoscaling settings to ensure the system scales as
+needed using the article https://access.redhat.com/solutions/7003274.
+13. Question: Should I choose an Egress IP or an Egress Gateway in a Service Mesh setup?
+Response: The choice between using an Egress IP and an Egress Gateway in a Service
+Mesh depends on your use case, operational preferences, and security requirements.
+Egress IP:
+● Simpler to implement and manage.
+● Leverages existing cluster-level NAT/firewall rules for outbound traffic.
+● Useful when you only need IP-based control or logging, and do not require advanced
+mesh features.
+Egress Gateway:
+● Provides fine-grained control over outbound traffic (e.g., destination policies, TLS
+origination).
+● Enables observability, security policies, and central traffic routing through Istio.
+● Ideal when you need strict compliance, external traffic monitoring, or egress policy
+enforcement at the mesh level.
+14. Question : Should circuit breaking and retries be handled at the application level, or can
+they be managed by the Service Mesh?
+Response: Circuit breaking and retries do not need to be implemented at the
+application level when using a Service Mesh, as these capabilities are natively supported and
+managed at the mesh layer.
+The Service Mesh (via its sidecar proxies) can handle:
+● Circuit Breaking: Automatically limits connections or requests to unhealthy services to
+prevent cascading failures.
+● Retries: Manages retry logic for failed requests with configurable limits and timeouts.
+AMQ Stream and ServiceMesh Plus Adoption Report 36
+This approach reduces application complexity by offloading these resilience patterns to the
+infrastructure layer, ensuring consistency across services without additional code.
+However, for custom logic or domain-specific behavior, you can still implement it at the
+application level — but it's generally recommended to leverage the Service Mesh features
+wherever possible.
+15. Question: How are VirtualServices configured in microservices namespaces within a
+Service Mesh, and what is their purpose?
+Response : In a Service Mesh, VirtualServices are configured in the same namespace as
+the microservice they are meant to route traffic to. They define routing rules for inbound traffic,
+such as how requests are matched, routed, and optionally retried or mirrored.
+Purpose of VirtualServices in microservices namespaces:
+● Control routing logic for a service (e.g., version-based routing, path-based routing).
+● Enable features like canary deployments, traffic shifting, and mirroring.
+● Apply fine-grained traffic policies without modifying the application.
+16. Question : How does a Gateway in the istio-system namespace help route traffic to
+access an application inside the Service Mesh?
+Response: A Gateway in the istio-system namespace is typically used to configure the
+Istio ingress gateway, which acts as the entry point for external traffic into the Service Mesh. It
+listens for incoming requests and forwards them to the appropriate internal service based on
+routing rules defined in a VirtualService.
+How It Works:
+● Gateway (istio-system namespace):
+○ Defines which ports, protocols, and hostnames the ingress gateway should listen
+on.
+○ Managed in the istio-system namespace where the control plane and ingress
+gateway pods reside.
+● VirtualService (application namespace):
+AMQ Stream and ServiceMesh Plus Adoption Report 37
+○ Binds to the Gateway and defines the routing rules to the internal microservice.
+○ Controls traffic routing based on URI paths, headers, or hostnames.
+17. Question: What Operator versions of Kiali and Tempo are supported with Red Hat
+OpenShift Service Mesh 3?
+Response : Kiali , ossmc plugin ,ocp version and ossm version compatibility table :-
+OSSM version Kiali Server version OSSMC plugin
+version
+OCP version
+3.0 v2.4 v2.4 4.15+
+2.6 v1.73 v1.73 4.15-4.18
+2.5 v1.73 v1.73 4.14-4.18
+Red Hat OpenShift distributed tracing platform is rolling stream operator i.e type of
+operator that follows a single, continuous update stream. That means instead of having
+separate tracks for major/minor versions (like 1.x, 2.x, etc.), there’s just one evolving
+version where new features and bug fixes are introduced as they're ready. It is not tied to
+OpenShift release version . Please follow this link to update rolling stream operator
+Rolling Stream
+AMQ Stream and ServiceMesh Plus Adoption Report 38
+18. Question: Can the control plane components of Service Mesh 3, including Kiali and
+OpenTelemetry (OTel) Collector, be deployed on infra nodes to optimize subscription
+costs?
+Response: Red Hat OpenShift Service Mesh 3 control plane components are eligible to
+run on infrastructure (infra) nodes, which can help optimize subscription costs by
+isolating control plane workloads from user workloads.However, since Kiali and
+OpenTelemetry (OTel) Collector are delivered as integrations outside the core Service
+Mesh 3 operator, their qualification to run on infra nodes is not explicitly documented.To
+ensure compliance and clarity, a support case has been created on the customer's behalf
+with Red Hat to confirm whether Kiali and OTel Collector are also supported on infra
+nodes under current subscription guidelines case number 04122309.
+Appendix
+Miro board: A dedicated Miros space was created to collaborate with the SBI and CEDGE team.
+Access is granted only by invite.
+AMQ Stream and ServiceMesh Plus Adoption Report 39
+Board link: Miro
+AMQ Stream and ServiceMesh Plus Adoption Report 40
+AMQ Stream and ServiceMesh Plus Adoption Report 41
+Walkthrough Queries
+Q. Support for mulitple netwrok for AMQ streams to use for replication.
+Q.
+AMQ Stream and ServiceMesh Plus Adoption Report 42
+Acronyms
+# Acronyms Description
+1 OCP OpenShift Container Platform
+2 OCP Plus OpenShift Container Platform Plus
+3 ODF OpenShift Data Foundation
+4 ACM Advance Cluster Management
+5 ACS Advance Cluster Security for Kubernetes
+6 ISG Information Security Group (Client) Business Unit
+7 BU Business Unit
+8 AKS Azure Kubernetes Service
+9 EKS AWS Elastic Kubernetes Service
+10 OOTB Out of the box
+11 CoE Center of Excellence
+12 AI Artificial Intelligence
+13 ML Machine Learning
+14 DMZ Demilitarized Zone
+15 MZ Militarized Zone
+AMQ Stream and ServiceMesh Plus Adoption Report 43
+Version History
+Ver Date Contributor Comment
+0.1 07-April-2025 Shailendra Kumar Singh
+Manish Pandey
+Initial Draft covering AMQ
+Streams and Service Mesh
+01 11-April-2025 Rajiv Ranjan Reviewer
+1.0 22-April-2025 Shailendra Kumar Singh
+Manish Pandey
+Updated input received on April
+16th
+References
+# Document
+1 SBIePay_2.0_Infra_Sizing_Preprod_Final_28-03-2025.xlxs
+2 SBI-ePay-_KafkaSizing___29Nov24.xlsx
+3 KAFKA_Config.txt
+4 Design_Daigrams.zip
+AMQ Stream and ServiceMesh Plus Adoption Report 44
