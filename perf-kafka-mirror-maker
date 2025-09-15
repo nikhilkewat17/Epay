@@ -1,0 +1,154 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+    meta.helm.sh/release-name: epay-common
+    meta.helm.sh/release-namespace: perf-epay-common
+  resourceVersion: '781766165'
+  name: perf-kafka-mirror-maker
+  uid: f55dbf04-649b-4ff0-a702-6583cdfe3b38
+  creationTimestamp: '2025-09-09T13:41:05Z'
+  generation: 1
+  managedFields:
+    - apiVersion: kafka.strimzi.io/v1beta2
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:metadata':
+          'f:annotations':
+            .: {}
+            'f:argocd.argoproj.io/sync-wave': {}
+            'f:meta.helm.sh/release-name': {}
+            'f:meta.helm.sh/release-namespace': {}
+          'f:labels':
+            .: {}
+            'f:app.kubernetes.io/component': {}
+            'f:app.kubernetes.io/instance': {}
+            'f:app.kubernetes.io/managed-by': {}
+            'f:app.kubernetes.io/name': {}
+            'f:environment': {}
+        'f:spec':
+          .: {}
+          'f:clusters': {}
+          'f:connectCluster': {}
+          'f:mirrors': {}
+          'f:replicas': {}
+          'f:resources':
+            .: {}
+            'f:limits':
+              .: {}
+              'f:cpu': {}
+              'f:memory': {}
+            'f:requests':
+              .: {}
+              'f:cpu': {}
+              'f:memory': {}
+          'f:template':
+            .: {}
+            'f:pod':
+              .: {}
+              'f:affinity':
+                .: {}
+                'f:nodeAffinity':
+                  .: {}
+                  'f:requiredDuringSchedulingIgnoredDuringExecution':
+                    .: {}
+                    'f:nodeSelectorTerms': {}
+              'f:tolerations': {}
+          'f:version': {}
+      manager: helm
+      operation: Update
+      time: '2025-09-09T13:41:05Z'
+    - apiVersion: kafka.strimzi.io/v1beta2
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:status':
+          .: {}
+          'f:conditions': {}
+          'f:labelSelector': {}
+          'f:observedGeneration': {}
+          'f:replicas': {}
+          'f:url': {}
+      manager: strimzi-cluster-operator
+      operation: Update
+      subresource: status
+      time: '2025-09-09T13:46:15Z'
+  namespace: perf-kafka
+  labels:
+    app.kubernetes.io/component: kafka-mirror-maker
+    app.kubernetes.io/instance: epay-common
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: perf-kafka-mirror-maker
+    environment: perf
+spec:
+  clusters:
+    - alias: source
+      bootstrapServers: 'perf-kafka-cluster-kafka-bootstrap.perf-kafka.svc.cluster.local:9092'
+    - alias: target
+      bootstrapServers: 'dr-kafka-cluster-kafka-bootstrap.dr-kafka.svc.cluster.local:9092'
+      config:
+        config.storage.replication.factor: -1
+        offset.storage.replication.factor: -1
+        status.storage.replication.factor: -1
+  connectCluster: target
+  mirrors:
+    - checkpointConnector:
+        config:
+          checkpoints.topic.replication.factor: 3
+          refresh.groups.interval.seconds: 600
+          sync.group.offsets.enabled: 'false'
+        tasksMax: 1
+      groupsPattern: .*
+      heartbeatConnector:
+        config:
+          heartbeats.topic.replication.factor: 3
+        tasksMax: 1
+      sourceCluster: source
+      sourceConnector:
+        config:
+          offset-syncs.topic.replication.factor: 3
+          refresh.topics.interval.seconds: 600
+          replication.factor: 3
+          replication.policy.class: org.apache.kafka.connect.mirror.IdentityReplicationPolicy
+          sync.topic.acls.enabled: true
+        tasksMax: 1
+      targetCluster: target
+      topicsPattern: .*
+  replicas: 1
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 2Gi
+  template:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/worker
+                    operator: Exists
+                  - key: workload-type
+                    operator: In
+                    values:
+                      - kafka
+      tolerations:
+        - effect: NoSchedule
+          key: workload-type
+          operator: Equal
+          value: kafka
+  version: 3.9.0
+status:
+  conditions:
+    - lastTransitionTime: '2025-09-09T13:46:15.083583237Z'
+      message: Exceeded timeout of 300000ms while waiting for Pods resource perf-kafka-mirror-maker-mirrormaker2-0 in namespace perf-kafka to be ready
+      reason: TimeoutException
+      status: 'True'
+      type: NotReady
+  labelSelector: 'strimzi.io/cluster=perf-kafka-mirror-maker,strimzi.io/name=perf-kafka-mirror-maker-mirrormaker2,strimzi.io/kind=KafkaMirrorMaker2'
+  observedGeneration: 1
+  replicas: 1
+  url: 'http://perf-kafka-mirror-maker-mirrormaker2-api.perf-kafka.svc:8083'
