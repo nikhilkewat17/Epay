@@ -1,0 +1,33 @@
+ssl.engine.factory.class = null
+ssl.key.password = null
+ssl.keymanager.algorithm = SunX509
+ssl.keystore.certificate.chain = null
+ssl.keystore.key = null
+ssl.keystore.location = null
+ssl.keystore.password = null
+ssl.keystore.type = JKS
+ssl.protocol = TLSv1.3
+ssl.provider = null
+ssl.secure.random.implementation = null
+ssl.trustmanager.algorithm = PKIX
+ssl.truststore.certificates = null
+ssl.truststore.location = null
+ssl.truststore.password = null
+ssl.truststore.type = JKS
+(org.apache.kafka.clients.admin.AdminClientConfig) [main]
+2025-09-15 07:23:16,423 WARN Couldn't resolve server dr-kafka-cluster-kafka-bootstrap.dr-kafka.svc.cluster.local:9092 from bootstrap.servers as DNS resolution failed for dr-kafka-cluster-kafka-bootstrap.dr-kafka.svc.cluster.local (org.apache.kafka.clients.ClientUtils) [main]
+2025-09-15 07:23:16,423 ERROR Stopping due to error (org.apache.kafka.connect.cli.AbstractConnectCli) [main]
+org.apache.kafka.common.KafkaException: Failed to create new KafkaAdminClient
+at org.apache.kafka.clients.admin.KafkaAdminClient.createInternal(KafkaAdminClient.java:561)
+at org.apache.kafka.clients.admin.Admin.create(Admin.java:147)
+at org.apache.kafka.connect.runtime.WorkerConfig.lookupKafkaClusterId(WorkerConfig.java:282)
+at org.apache.kafka.connect.runtime.WorkerConfig.kafkaClusterId(WorkerConfig.java:413)
+at org.apache.kafka.connect.cli.AbstractConnectCli.startConnect(AbstractConnectCli.java:124)
+at org.apache.kafka.connect.cli.AbstractConnectCli.run(AbstractConnectCli.java:95)
+at org.apache.kafka.connect.cli.ConnectDistributed.main(ConnectDistributed.java:112)
+Caused by: org.apache.kafka.common.config.ConfigException: No resolvable bootstrap urls given in bootstrap.servers
+at org.apache.kafka.clients.ClientUtils.parseAndValidateAddresses(ClientUtils.java:104)
+at org.apache.kafka.clients.ClientUtils.parseAndValidateAddresses(ClientUtils.java:63)
+at org.apache.kafka.clients.admin.internals.AdminBootstrapAddresses.fromConfig(AdminBootstrapAddresses.java:72)
+at org.apache.kafka.clients.admin.KafkaAdminClient.createInternal(KafkaAdminClient.java:530)
+... 6 more
