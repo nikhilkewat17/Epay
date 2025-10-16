@@ -1,0 +1,91 @@
+# SparkApplication for ReconSparkAppMain
+# SBI E-Pay - Secure S3 Integration on OpenShift
+
+apiVersion: spark.apache.org/v1beta1
+kind: SparkApplication
+metadata:
+  name: recon-spark-app
+  namespace: dev-rns
+  labels:
+    app: recon-spark-main
+    version: "0.0.1"
+    java-version: "21"
+    component: recon
+spec:
+  deploymentMode: ClusterMode
+  mainClass: com.epay.operations.recon.ReconSparkAppMain
+  jars: local:///opt/spark/work-dir/recon-spark-job.jar
+
+  runtimeVersions:
+    sparkVersion: "4.0.0"
+
+  sparkConf:
+    # === IMAGE CONFIGURATION ===
+    spark.kubernetes.container.image: registry.dev.sbiepay.sbi:8443/spark/sparkrecon:4.0.0_12092025v20
+    spark.kubernetes.container.image.pullPolicy: Always
+
+    # === SECURITY CONFIGURATION ===
+    spark.kubernetes.authenticate.driver.serviceAccountName: spark-sa
+    spark.kubernetes.executor.serviceAccount: spark-sa
+
+    # === RESOURCE CONFIGURATION ===
+    spark.driver.memory: "2g"
+    spark.driver.cores: "2"
+    spark.executor.instances: "1"
+    spark.executor.memory: "1g"
+    spark.executor.cores: "1"
+    spark.dynamicAllocation.enabled: "false"
+
+    # === ENVIRONMENT VARIABLES ===
+    spark.kubernetes.driver.service.type: ClusterIP
+    spark.kubernetes.driver.env.rfId: "1A6CF13C-DF22-4845-A15A-F740E2716015"
+    spark.kubernetes.driver.env.callbackUrl: "http://your-ops-service:9097/api/rns/v1/spark/recon-complete-callback"
+    spark.kubernetes.driver.env.RECON_MODE: "production"
+    spark.kubernetes.driver.env.DATA_SOURCE: "hdfs"
+    spark.kubernetes.driver.env.OUTPUT_PATH: "/tmp/recon/output"
+    spark.kubernetes.driver.env.LOG_LEVEL: "INFO"
+
+    # === S3 CERTIFICATE CONFIGURATION ===
+    # Mount S3 certificate secret for driver & executor
+    spark.kubernetes.driver.secrets.s3-cert-secret: /etc/certs
+    spark.kubernetes.executor.secrets.s3-cert-secret: /etc/certs
+
+    # Use the certificate as truststore for secure S3 access
+    spark.driver.extraJavaOptions: >-
+      -DrfId=1A6CF13C-DF22-4845-A15A-F740E2716015
+      -DcallbackUrl=http://your-ops-service:9097/api/rns/v1/spark/recon-complete-callback
+      -DRECON_MODE=production
+      -DDATA_SOURCE=hdfs
+      -DOUTPUT_PATH=/tmp/recon/output
+      -DLOG_LEVEL=INFO
+      -Djavax.net.ssl.trustStore=/etc/certs/s3-cert.pem
+      -XX:+UseG1GC
+      -XX:MaxGCPauseMillis=200
+
+    spark.executor.extraJavaOptions: >-
+      -Djavax.net.ssl.trustStore=/etc/certs/s3-cert.pem
+      -XX:+UseG1GC
+      -XX:MaxGCPauseMillis=200
+
+    # === HADOOP / S3 CONFIGURATION ===
+    spark.hadoop.fs.s3a.endpoint: "https://<your-s3-endpoint>"
+    spark.hadoop.fs.s3a.path.style.access: "true"
+    spark.hadoop.fs.s3a.connection.ssl.enabled: "true"
+    spark.hadoop.fs.s3a.connection.ssl.cert.path: "/etc/certs/s3-cert.pem"
+
+    # === GENERAL SPARK CONFIG ===
+    spark.kubernetes.namespace: dev-rns
+    spark.app.name: "recon-spark-app"
+
+    # === LOGGING ===
+    spark.kubernetes.driver.log.maxFiles: "10"
+    spark.kubernetes.driver.log.maxSize: "200m"
+    spark.kubernetes.executor.log.maxFiles: "10"
+    spark.kubernetes.executor.log.maxSize: "200m"
+
+    # === PERFORMANCE ===
+    spark.sql.adaptive.enabled: "true"
+    spark.sql.adaptive.coalescePartitions.enabled: "true"
+    spark.sql.adaptive.skewJoin.enabled: "true"
+    spark.serializer: "org.apache.spark.serializer.KryoSerializer"
+    spark.sql.execution.arrow.pyspark.enabled: "true"
