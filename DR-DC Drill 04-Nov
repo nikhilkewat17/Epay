@@ -1,0 +1,55 @@
+Prod-DR to Prod-DC drill
+Kafka mirror maker 2 
+
+Applications will down
+
+#This stops replication before direction change.
+Prod-DR
+oc scale KafkaMirrorMaker2 prod-dr-kafka-mirror-maker -n prod-dr-kafka --replicas=0
+oc get pods -n prod-dr-kafka | grep mirror
+#Wait until the MM2 pod is Terminated.
+
+
+
+#Clean the DC Cluster Topics (Optional but Recommended)
+prod-dc
+oc rsh -n prod-dc-kafka prod-dc-kafka-cluster-broker-0
+
+cd /opt/kafka/bin/
+
+for t in $(./kafka-topics.sh --bootstrap-server localhost:9092 --list | grep -v '^__' | grep -v 'mm2-' | grep -v 'mirrormaker2-'); do
+  echo "Deleting topic: $t"
+  ./kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic "$t"
+done
+exit
+
+#This deletes only user/application topics.
+#It will not delete internal topics (__consumer_offsets, mm2-offset-syncs.*, etc.).
+
+
+Update MM2 Config in DC (Reverse Direction)
+change in gitlab # remove and add
+
+####Start MirrorMaker2 on DC
+prod-dc
+oc scale KafkaMirrorMaker2 prod-dc-kafka-mirror-maker -n prod-dc-kafka --replicas=1
+
+oc get pods -n prod-dc-kafka | grep mirror
+
+==================================================================================================================
+
+Verify MM2 Logs
+oc logs -f -n prod-dc-kafka <mm2-pod-name>
+Validate Topic Sync
+
+Run inside DC broker pod:
+prod-dc broker pod
+oc rsh -n prod-dc-kafka prod-dc-kafka-cluster-broker-0
+
+cd /opt/kafka/bin/
+./kafka-topics.sh --bootstrap-server localhost:9092 --list
+exit
+
+===============optional==========================================================================================
+Once DC is stable:
+oc scale KafkaMirrorMaker2 prod-dr-kafka-mirror-maker -n prod-dr-kafka --replicas=0
