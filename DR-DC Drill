@@ -1,0 +1,223 @@
+Devops@SBIePay 2.0 Switch Over Drill Document 
+
+DR -> DC 
+
+SBIePay Switch-Over Drill – step-by-step 
+
+Quick Overview 
+
+1. Prepare DR & DC (prechecks, backups, health). 
+
+2. Stop DC applications and enable maintenance.  
+
+3. Database switchover (DR-> DC).  
+
+4. Kafka MirrorMaker2 & topic cleanup.  
+
+5. Change GTLD DNS pointer to DC.  
+
+6. Start apps on DC and run verification.  
+
+7. Post-drill checks and re-enable jobs.  
+
+8. Verify Kafka offsets replication (new section). 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
+
+Pre-drill checklist (Must complete BEFORE drill)  
+
+Confirm drill date/time & communications channel.  
+
+Take DB full + archivelog backup.  
+
+Verify Oracle standby sync and alert logs.  
+
+Set JOB_QUEUE_PROCESSES=0 before switchover.  
+
+Pause cron/jobs.  
+
+Verify Kafka & OpenShift cluster health.  
+
+Roles & Responsibilities  
+
+DR Ops Lead: Stop DR apps.  
+
+DB Lead: Perform Oracle switchover.  
+
+Kafka Lead: Topic cleanup and MirrorMaker2.  
+
+DNS Lead: Update GTLD pointer.  
+
+Application Lead: Start DC apps and verify. 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Step-by-step Procedure 
+
+ (Follow the sequence carefully and document timestamps.) 
+
+1) Maintenance Enablement  
+
+Enable public maintenance page and notify all stakeholders. 
+
+2) Stop all application services on DR 
+
+Run: sh shutdown-multiple-namespace.sh  
+
+Verify pods: oc get deploy -n  
+
+oc get pods -A | grep -i prod-dr 
+
+3) DNS pointers change (DNS Lead)  
+
+Change GTLD record to DC LB IP.  
+
+Verify: curl -I https://www.sbiepay.sbi.bank.in  
+
+4) Oracle DB Switchover (DB Lead)  
+
+Prechecks:  
+
+SQL> ALTER DATABASE SWITCHOVER TO standby_db_unique_name VERIFY;  
+
+SQL> SELECT name, open_mode, database_role, switchover_status FROM v$database;  
+
+Then:  
+
+SQL> ALTER DATABASE SWITCHOVER TO standby_db_unique_name;  
+
+SQL> ALTER DATABASE OPEN 
+
+5) Kafka topic cleanup & MirrorMaker2 (Kafka Lead)  
+
+oc rsh for t in $(/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list | grep-v '^_' | grep -v 'mm2' | grep -v 'mirrormaker2-'); do ./kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic "$t"  
+
+done  
+
+Deploy MM2 to DC and verify topics. 
+
+6) Start all application services on DR  
+
+Run:  
+
+sh startup-multiple-namespaces.sh  
+
+Verify pods running and ready. 
+
+7) Application & functional verification 
+
+ Run smoke tests for critical flows, check logs and ensure no errors. 
+
+ 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 
+
+ 
+
+8) Kafka Offset Verification (Post Drill Check)  
+
+Goal: Ensure offsets match between DR and DC.  
+
+Step 1: List topics on both clusters:  
+
+oc rsh /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092--list > /tmp/topics-dc.txt  
+
+oc rsh /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092--list > /tmp/topics-dr.txt  
+
+diff /tmp/topics-dc.txt /tmp/topics-dr.txt  
+
+Step 2: Get offsets:  
+
+oc rsh /opt/kafka/bin/kafka-run-class.sh kafka.tools.GetOffsetShell--broker-list localhost:9092 --topic --time -1 > /tmp/dc_offsets.txt  
+
+oc rsh /opt/kafka/bin/kafka-run-class.sh kafka.tools.GetOffsetShell--broker-list localhost:9092 --topic --time -1 > /tmp/dr_offsets.txt  
+
+Step 3: Compare offsets:  
+
+diff dc_offsets.txt dr_offsets.txt Expected: Offsets match or lag <= 1. 
+
+Step 4: Verify partition counts: /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic | grep PartitionCount  
+
+Step 5: Check MM2 consumer lag:  
+
+oc logs | grep replication /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group mm2-cluster-name --describe  
+
+Optional Script:  
+
+for t in $(/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list | grep-v '^_'); do /opt/kafka/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list localhost:9092 --topic $t --time -1 >> /tmp/offset_report.txt  
+
+Done 
+
+ 
+
+9) Post-drill checks & rollback plan  
+
+Ensure all services up, re-enable monitoring/jobs.  
+
+If failures: rollback DB, stop MM2, revert DNS to DR.  
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Printable Checklist  
+
+[ ] Backup done  
+
+[ ] Oracle OK  
+
+[ ] DC stopped  
+
+[ ] DNS switched  
+
+[ ] DB switched  
+
+[ ] Kafka synced  
+
+[ ] DR started  
+
+[ ] Offsets verified  
+
+[ ] Jobs re-enabled 
+
+ 
+
+IN SHORT – DR → DC SWITCHOVER FLOW 
+
+[Step 1] Verify sync + backup 
+
+      ↓ 
+
+[Step 2] Stop cron/jobs (job_queue=0) 
+
+      ↓ 
+
+[Step 3] ALTER DATABASE SWITCHOVER TO DC_DB VERIFY 
+
+      ↓ 
+
+[Step 4] ALTER DATABASE SWITCHOVER TO DC_DB 
+
+      ↓ 
+
+[Step 5] OPEN DATABASE on DC (now primary) 
+
+      ↓ 
+
+[Step 6] Start managed recovery on DR (now standby) 
+
+      ↓ 
+
+[Step 7] Re-enable jobs, archive destinations 
+
+      ↓ 
+
+[Step 8] Verify roles + sync + Goldengate 
